@@ -1,0 +1,461 @@
+import React, { useState, useEffect } from 'react';
+import { theme } from '../styles/theme';
+import DiscussionStats from '../components/DiscussionStats';
+import InteractionGraph from '../components/InteractionGraph';
+
+export default function ChatRoom() {
+  const [messages, setMessages] = useState([]);
+  const [topic, setTopic] = useState('');
+  const [isDiscussionStarted, setIsDiscussionStarted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [showTopicSuggestions, setShowTopicSuggestions] = useState(false);
+  
+  const topicSuggestions = [
+    '如何提高团队工作效率？',
+    '人工智能对未来就业市场的影响',
+    '可持续发展与环保策略',
+    '远程工作的优缺点分析',
+    '数字化转型面临的挑战',
+    '提高创新能力的方法',
+    '元宇宙的发展前景'
+  ];
+  
+  const selectTopicSuggestion = (suggestion) => {
+    setTopic(suggestion);
+    setShowTopicSuggestions(false);
+  };
+  
+  // 模拟的智能体数据
+  const agents = [
+    { id: 'agent1', name: '小明', role: '主持人', apiKey: 'mock-key-1', description: '负责引导讨论方向和总结观点' },
+    { id: 'agent2', name: '小红', role: '创意者', apiKey: 'mock-key-2', description: '提供创新的想法和解决方案' },
+    { id: 'agent3', name: '小李', role: '批评者', apiKey: 'mock-key-3', description: '质疑假设并指出潜在问题' },
+    { id: 'agent4', name: '小张', role: '分析者', apiKey: 'mock-key-4', description: '分析数据和趋势，提供客观见解' }
+  ];
+  
+  const startDiscussion = () => {
+    if (!topic.trim()) {
+      alert('请输入讨论话题');
+      return;
+    }
+    
+    setIsDiscussionStarted(true);
+    
+    // 创建系统消息作为讨论的开始
+    const initialMessage = {
+      id: Date.now().toString(),
+      agentId: 'system',
+      text: `讨论话题: ${topic}`,
+      timestamp: new Date().toISOString(),
+      type: 'system'
+    };
+    
+    setMessages([initialMessage]);
+    continueDiscussion();
+  };
+  
+  const resetDiscussion = () => {
+    setMessages([]);
+    setTopic('');
+    setIsDiscussionStarted(false);
+    setIsLoading(false);
+    setIsSummarizing(false);
+  };
+  
+  const getAgentById = (agentId) => {
+    return agents.find(agent => agent.id === agentId) || { name: '系统', role: '系统' };
+  };
+  
+  const getRoleColor = (role) => {
+    const roleColors = {
+      '主持人': '#4A6FA5',
+      '创意者': '#47B881',
+      '批评者': '#D14343',
+      '整合者': '#9F7AEA',
+      '分析者': '#3182CE',
+      '执行者': '#DD6B20',
+      '协调者': '#38A169',
+      '专家': '#805AD5',
+      '记录者': '#718096',
+      '系统': '#4A5568'
+    };
+    return roleColors[role] || roleColors['系统'];
+  };
+  
+  const getRoleIcon = (role) => {
+    const roleIcons = {
+      '主持人': '🎯',
+      '创意者': '💡',
+      '批评者': '🔍',
+      '整合者': '🔄',
+      '分析者': '📊',
+      '执行者': '🛠️',
+      '协调者': '🤝',
+      '专家': '🧠',
+      '记录者': '📝',
+      '系统': '🤖'
+    };
+    return roleIcons[role] || roleIcons['系统'];
+  };
+  
+  const generateAgentResponse = (agentId, currentMessages) => {
+    const agent = getAgentById(agentId);
+    let responseText = '';
+    
+    switch(agent.role) {
+      case '主持人':
+        responseText = `让我们继续讨论"${topic}"。${currentMessages.length < 3 ? '每个人可以先分享一下自己的初步想法。' : '我们已经有了一些观点，可以更深入地探讨一下。'}`;
+        break;
+      case '创意者':
+        responseText = `我有一个创新的想法：我们可以从${Math.random() > 0.5 ? '技术角度' : '用户体验角度'}来思考这个问题，${Math.random() > 0.5 ? '利用最新的AI技术' : '结合设计思维'}可能会带来突破性的解决方案。`;
+        break;
+      case '批评者':
+        responseText = `我认为我们需要考虑一下潜在的问题：${Math.random() > 0.5 ? '这个方案的成本可能过高' : '实施过程中可能会遇到很多阻力'}。我们是否充分评估了风险？`;
+        break;
+      case '分析者':
+        responseText = `根据我的分析，${Math.random() > 0.5 ? '当前的市场趋势表明' : '数据显示'}这个方向是有潜力的，但我们需要更多的${Math.random() > 0.5 ? '用户反馈' : '实验数据'}来验证我们的假设。`;
+        break;
+      default:
+        responseText = `关于"${topic}"，我认为${Math.random() > 0.5 ? '我们应该从多角度思考' : '创新和实用性同样重要'}。`;
+    }
+    
+    return {
+      id: Date.now().toString(),
+      agentId: agentId,
+      text: responseText,
+      timestamp: new Date().toISOString(),
+      type: 'message'
+    };
+  };
+  
+  const continueDiscussion = () => {
+    setIsLoading(true);
+    
+    // 模拟API调用延迟
+    setTimeout(() => {
+      let nextAgentId;
+      
+      if (messages.length === 0) {
+        nextAgentId = agents[0].id; // 第一个智能体开始
+      } else {
+        // 确定下一个发言的智能体
+        const lastMessageAgentIndex = agents.findIndex(agent => 
+          agent.id === messages[messages.length - 1].agentId
+        );
+        
+        const nextAgentIndex = (lastMessageAgentIndex + 1) % agents.length;
+        nextAgentId = agents[nextAgentIndex].id;
+      }
+      
+      const newMessage = generateAgentResponse(nextAgentId, messages);
+      setMessages(prevMessages => [...prevMessages, newMessage]);
+      setIsLoading(false);
+    }, 1500);
+  };
+  
+  const summarizeDiscussion = () => {
+    setIsSummarizing(true);
+    
+    // 模拟API调用延迟
+    setTimeout(() => {
+      const summaryMessage = {
+        id: Date.now().toString(),
+        agentId: 'system',
+        text: `讨论总结：关于"${topic}"的讨论中，参与者提出了多个观点。主要包括了创新思路、潜在问题分析以及数据支持的见解。团队需要进一步深入探讨具体实施方案和评估可行性。`,
+        timestamp: new Date().toISOString(),
+        type: 'summary'
+      };
+      
+      setMessages(prevMessages => [...prevMessages, summaryMessage]);
+      setIsSummarizing(false);
+    }, 2000);
+  };
+
+  return (
+    <div style={{ padding: '1.5rem' }}>
+      <h2 style={{ 
+        color: theme.colors.primary, 
+        marginTop: 0, 
+        marginBottom: '1.5rem',
+        textAlign: 'center'
+      }}>
+        AI多智能体讨论室
+      </h2>
+      
+      {!isDiscussionStarted ? (
+        <div style={{
+          maxWidth: '600px',
+          margin: '0 auto',
+          backgroundColor: 'white',
+          padding: '2rem',
+          borderRadius: '8px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ 
+            color: theme.colors.primary, 
+            marginTop: 0, 
+            marginBottom: '1.5rem',
+            textAlign: 'center'
+          }}>
+            开始新讨论
+          </h3>
+          
+          <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
+            <label htmlFor="topic" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              讨论话题：
+            </label>
+            <input 
+              id="topic"
+              type="text" 
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                fontSize: '1rem'
+              }}
+              placeholder="输入讨论话题..."
+            />
+            
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+              <button 
+                onClick={() => setShowTopicSuggestions(!showTopicSuggestions)}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: theme.colors.primary,
+                  cursor: 'pointer',
+                  padding: '0.25rem 0',
+                  fontSize: '0.875rem',
+                  textDecoration: 'underline'
+                }}
+              >
+                话题建议
+              </button>
+            </div>
+            
+            {showTopicSuggestions && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                backgroundColor: 'white',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                zIndex: 10,
+                marginTop: '0.25rem'
+              }}>
+                {topicSuggestions.map((suggestion, index) => (
+                  <div 
+                    key={index}
+                    onClick={() => selectTopicSuggestion(suggestion)}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      borderBottom: index < topicSuggestions.length - 1 ? '1px solid #eee' : 'none',
+                      cursor: 'pointer'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  >
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <button 
+            onClick={startDiscussion}
+            style={{
+              backgroundColor: theme.colors.primary,
+              color: 'white',
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              width: '100%',
+              fontSize: '1rem'
+            }}
+          >
+            开始讨论
+          </button>
+        </div>
+      ) : (
+        <div>
+          {messages.length > 0 && (
+            <>
+              <DiscussionStats messages={messages} agents={agents} />
+              <InteractionGraph messages={messages} agents={agents} />
+            </>
+          )}
+          
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            padding: '1rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            marginBottom: '1rem'
+          }}>
+            <button 
+              onClick={resetDiscussion}
+              style={{
+                backgroundColor: '#f44336',
+                color: 'white',
+                padding: '0.5rem 1rem',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginBottom: '1rem'
+              }}
+            >
+              重置讨论
+            </button>
+            
+            <div style={{
+              maxHeight: '400px',
+              overflowY: 'auto',
+              padding: '0.5rem'
+            }}>
+              {messages.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {messages.map(message => {
+                    const agent = getAgentById(message.agentId);
+                    return (
+                      <div 
+                        key={message.id}
+                        style={{
+                          opacity: 0,
+                          animation: 'fadeIn 0.3s forwards',
+                          animationDelay: '0.1s',
+                          transform: 'translateY(10px)',
+                          transition: 'transform 0.3s ease-out'
+                        }}
+                      >
+                        <div style={{ display: 'flex', marginBottom: '0.5rem' }}>
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            backgroundColor: getRoleColor(agent.role),
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: '0.75rem',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: '1.25rem'
+                          }}>
+                            {getRoleIcon(agent.role)}
+                          </div>
+                          
+                          <div style={{ flex: 1 }}>
+                            <div style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center'
+                            }}>
+                              <div style={{ fontWeight: 'bold', color: getRoleColor(agent.role) }}>
+                                {agent.name || '未知智能体'}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: '#888' }}>
+                                {new Date(message.timestamp).toLocaleTimeString()}
+                              </div>
+                            </div>
+                            
+                            <div style={{
+                              fontSize: '0.8rem',
+                              color: '#666',
+                              marginBottom: '0.25rem'
+                            }}>
+                              {agent.role || '未知角色'}
+                            </div>
+                            
+                            <div style={{
+                              backgroundColor: message.type === 'system' ? '#f5f5f5' : 
+                                            message.type === 'summary' ? '#e8f4f8' : '#f9f9f9',
+                              padding: '0.75rem',
+                              borderRadius: '4px',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                              whiteSpace: 'pre-wrap',
+                              lineHeight: '1.5',
+                              border: message.type === 'summary' ? '1px dashed #4A6FA5' : 'none'
+                            }}>
+                              {message.text}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100%',
+                  color: '#666'
+                }}>
+                  等待智能体开始讨论...
+                </div>
+              )}
+            </div>
+
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: '1rem'
+            }}>
+              <button 
+                onClick={continueDiscussion}
+                disabled={isLoading || isSummarizing}
+                style={{
+                  backgroundColor: isLoading ? '#cccccc' : theme.colors.primary,
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: isLoading ? 'default' : 'pointer',
+                  fontWeight: 'bold',
+                  flex: 1,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                {isLoading ? '生成中...' : '继续讨论'}
+              </button>
+              
+              <button 
+                onClick={summarizeDiscussion}
+                disabled={isLoading || isSummarizing || messages.length < 2}
+                style={{
+                  backgroundColor: isSummarizing || messages.length < 2 ? '#cccccc' : '#4caf50',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: isSummarizing || messages.length < 2 ? 'default' : 'pointer',
+                  fontWeight: 'bold',
+                  flex: 1,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                {isSummarizing ? '总结中...' : '总结讨论'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

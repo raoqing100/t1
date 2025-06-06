@@ -1,0 +1,183 @@
+/* 全局样式 */
+:root {
+  /* 基础颜色 - 明亮模式默认值 */
+  --primary-color: #4A6FA5;
+  --secondary-color: #47B881;
+  --error-color: #D14343;
+  --warning-color: #F7D154;
+  --success-color: #47B881;
+  --background-color: #f5f7fa;
+  --surface-color: #ffffff;
+  --text-color: #333333;
+  --text-secondary: #666666;
+  --border-color: #e0e0e0;
+  --divider-color: #eeeeee;
+  --disabled-color: #cccccc;
+  
+  /* 主题颜色变体 */
+  --primary-light: #5B8AD9;
+  --primary-dark: #3A5A84;
+  --secondary-light: #58D99E;
+  --secondary-dark: #389A6A;
+  
+  /* 账号级别颜色 */
+  --account-free: #2E8B57;
+  --account-standard: #4682B4;
+  --account-premium: #FFD700;
+  --account-enterprise: #9370DB;
+  
+  /* 模型访问权限颜色 */
+  --model-available: #4caf50;
+  --model-unavailable: #ff6b6b;
+  
+  /* 卡片和输入框背景 */
+  --card-bg: #ffffff;
+  --input-bg: #f5f7fa;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 2px 6px rgba(0,0,0,0.15);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* 暗色模式 */
+.dark-mode {
+  --primary-color: #5B8AD9;
+  --secondary-color: #4CC38A;
+  --error-color: #E05252;
+  --warning-color: #F7D154;
+  --success-color: #4CC38A;
+  --background-color: #121212;
+  --surface-color: #1E1E1E;
+  --text-color: #E0E0E0;
+  --text-secondary: #A0A0A0;
+  --border-color: #333333;
+  --divider-color: #2A2A2A;
+  --disabled-color: #555555;
+  
+  /* 主题颜色变体 */
+  --primary-light: #7AA3E9;
+  --primary-dark: #4A6FA5;
+  --secondary-light: #6EDAA6;
+  --secondary-dark: #3A9A6E;
+  
+  /* 账号级别颜色 */
+  --account-free: #3EA76A;
+  --account-standard: #5A9FD6;
+  --account-premium: #FFE44D;
+  --account-enterprise: #B28AFF;
+  
+  /* 模型访问权限颜色 */
+  --model-available: #5CCA60;
+  --model-unavailable: #FF8080;
+  
+  /* 卡片和输入框背景 */
+  --card-bg: #1E1E1E;
+  --input-bg: #2A2A2A;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 2px 6px rgba(0,0,0,0.4);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+/* 通用样式类 */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.card {
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-dark);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
+
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.mb-4 { margin-bottom: 2rem; }
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
+  }
+} 

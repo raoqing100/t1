@@ -1,0 +1,26 @@
+/* App样式 */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px 0;
+}
+
+/* 暗色模式 */
+.dark-mode {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* 亮色模式 */
+.light-mode {
+  background-color: var(--background-color);
+  color: var(--text-color);
+} 

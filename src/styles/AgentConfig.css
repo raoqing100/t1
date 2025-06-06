@@ -1,0 +1,361 @@
+/* 代理配置样式 */
+.agent-config {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.agent-config h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--text-color);
+}
+
+.agent-config h3 {
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+
+.mcp-services {
+  margin-bottom: 20px;
+}
+
+.mcp-services select,
+.account-info select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.account-info {
+  margin-bottom: 20px;
+}
+
+.account-note {
+  margin-top: 8px;
+  font-size: 0.9em;
+  color: #ff6b6b;
+}
+
+.agent-item {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+.model-selector {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.add-button,
+.start-button,
+.remove-button,
+.save-config-button,
+.load-config-button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.add-button {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.start-button {
+  background-color: var(--primary-color);
+  color: white;
+  flex: 1;
+}
+
+.remove-button {
+  background-color: #ff6b6b;
+  color: white;
+  margin-top: 10px;
+}
+
+.save-config-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.load-config-button {
+  background-color: #17a2b8;
+  color: white;
+}
+
+/* API密钥输入框样式 */
+.api-key-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.api-key-input input {
+  flex: 1;
+}
+
+.test-api-button {
+  background: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.test-api-button:hover {
+  background: var(--secondary-dark);
+}
+
+.api-key-hint {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.api-key-hint a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.api-key-hint a:hover {
+  text-decoration: underline;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+  .agent-config {
+    padding: 10px;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+}
+
+/* 模态框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: var(--text-color);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.save-button,
+.load-button,
+.cancel-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.save-button,
+.load-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.cancel-button {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* 配置列表样式 */
+.config-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.config-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  background-color: var(--input-bg);
+}
+
+.config-info h4 {
+  margin: 0 0 4px 0;
+  color: var(--text-color);
+}
+
+.config-info p {
+  margin: 0 0 4px 0;
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+
+.config-info small {
+  color: var(--text-secondary);
+  font-size: 0.8em;
+}
+
+/* 描述提示样式 */
+.description-hint {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+  line-height: 1.4;
+}
+
+/* 配置信息样式 */
+.config-info {
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.info-box {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.info-box h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.info-box p {
+  margin: 0 0 10px 0;
+  line-height: 1.5;
+}
+
+.info-box ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.info-box li {
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.info-box strong {
+  font-weight: bold;
+}
+
+.reset-default-button {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+  align-self: flex-start;
+}
+
+.reset-default-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.reset-default-button:active {
+  transform: translateY(0);
+}
+
+/* 响应式设计扩展 */
+@media (max-width: 600px) {
+  .config-info {
+    margin-bottom: 20px;
+  }
+  
+  .info-box {
+    padding: 15px;
+  }
+  
+  .info-box h3 {
+    font-size: 1.1em;
+  }
+  
+  .reset-default-button {
+    align-self: stretch;
+    text-align: center;
+  }
+} 
