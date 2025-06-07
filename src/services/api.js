@@ -3,8 +3,10 @@
  * 基于 SiliconFlow 文档: https://docs.siliconflow.cn/
  */
 
+import { getApiBaseUrl, getDefaultModel } from '../config/env';
+
 // API基础URL
-const API_BASE_URL = 'https://api.siliconflow.cn/v1';
+const API_BASE_URL = getApiBaseUrl('SILICONFLOW') || 'https://api.siliconflow.cn/v1';
 
 // 最大重试次数
 const MAX_RETRIES = 3;
@@ -183,7 +185,7 @@ export const canAccessModel = async (apiKey, modelId) => {
 export const generateResponse = async (apiKey, model, messages, stream = false, onChunk = null) => {
   try {
     // 使用SiliconFlow推荐的默认模型
-    const selectedModel = model || 'Qwen/Qwen2.5-7B-Instruct';
+    const selectedModel = model || getDefaultModel('SILICONFLOW') || 'Qwen/Qwen2.5-7B-Instruct';
     
     console.log('API请求参数:', {
       url: `${API_BASE_URL}/chat/completions`,

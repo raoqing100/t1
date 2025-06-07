@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { mcpServices } from '../services/mcpServices';
 import ModelSelector from './ModelSelector';
 import { saveApiKey, getApiKey, saveAgentConfig, getAgentConfigList, getAgentConfigById } from '../services/localStorage';
+import { ENTERPRISE_AGENT_CONFIG } from '../config/enterpriseAgents';
 import '../styles/AgentConfig.css';
 
 /**
@@ -115,6 +116,7 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
   const [configName, setConfigName] = useState('');
   const [showSaveConfigModal, setShowSaveConfigModal] = useState(false);
   const [showLoadConfigModal, setShowLoadConfigModal] = useState(false);
+  const [configMode, setConfigMode] = useState('custom'); // 'custom' | 'enterprise'
 
   // 加载已保存的配置列表
   useEffect(() => {
@@ -266,7 +268,33 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
       const defaultAgents = getDefaultAgents();
       setAgentList(defaultAgents);
       saveAgentsConfig(defaultAgents);
+      setConfigMode('custom');
       alert('已重置为默认对峙性配置！');
+    }
+  };
+
+  // 应用企业模式配置
+  const applyEnterpriseConfig = () => {
+    // eslint-disable-next-line no-restricted-globals
+    if (confirm('确定要切换到企业模式吗？这将使用专业的企业组织架构智能体配置。')) {
+      const enterpriseAgents = ENTERPRISE_AGENT_CONFIG.agents.map(agent => ({
+        id: agent.id,
+        name: agent.name,
+        role: agent.role,
+        apiKey: '',
+        model: '',
+        description: agent.systemPrompt,
+        avatar: agent.avatar,
+        color: agent.color,
+        priority: agent.priority,
+        speakingOrder: agent.speakingOrder,
+        triggers: agent.triggers
+      }));
+      
+      setAgentList(enterpriseAgents);
+      saveAgentsConfig(enterpriseAgents);
+      setConfigMode('enterprise');
+      alert('已应用企业模式配置！现在您拥有一个完整的企业决策团队。');
     }
   };
   
@@ -274,29 +302,80 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
     <div className="agent-config">
       <h2>配置智能体</h2>
       
-      <div className="config-info">
-        <div className="info-box">
-          <h3>🔥 对峙性智能体配置说明</h3>
-          <p>本系统预设了7个具有强烈对峙性和批判性思维的智能体角色，旨在产生深度的思辨讨论：</p>
-          <ul>
-            <li><strong>严厉主持人</strong>：主动挑起争议，推动激烈辩论</li>
-            <li><strong>激进创新者</strong>：挑战传统，提出颠覆性观点</li>
-            <li><strong>尖锐批评家</strong>：无情批评，寻找观点漏洞</li>
-            <li><strong>冷酷分析师</strong>：用数据和逻辑拆解错误观点</li>
-            <li><strong>严格整合者</strong>：深挖冲突，拒绝表面妥协</li>
-            <li><strong>务实质疑者</strong>：质疑不切实际的想法</li>
-            <li><strong>权威专家</strong>：用专业知识无情批判</li>
-          </ul>
-          <p><strong>注意</strong>：这些角色被设计为产生建设性冲突，促进深度思考，而非恶意攻击。</p>
+      <div className="config-mode-selector">
+        <h3>🎯 选择配置模式</h3>
+        <div className="mode-buttons">
+          <button 
+            className={`mode-button ${configMode === 'custom' ? 'active' : ''}`}
+            onClick={resetToDefaultConfig}
+          >
+            🔥 对峙性辩论模式
+            <span className="mode-description">7个具有强烈批判性思维的智能体，促进深度辩论</span>
+          </button>
+          
+          <button 
+            className={`mode-button ${configMode === 'enterprise' ? 'active' : ''}`}
+            onClick={applyEnterpriseConfig}
+          >
+            🏢 企业决策模式
+            <span className="mode-description">8个专业企业角色，模拟真实企业决策流程</span>
+          </button>
         </div>
-        
-        <button 
-          onClick={resetToDefaultConfig}
-          className="reset-default-button"
-        >
-          🔄 重置为默认对峙性配置
-        </button>
       </div>
+
+      {configMode === 'custom' && (
+        <div className="config-info">
+          <div className="info-box">
+            <h3>🔥 对峙性智能体配置说明</h3>
+            <p>本系统预设了7个具有强烈对峙性和批判性思维的智能体角色，旨在产生深度的思辨讨论：</p>
+            <ul>
+              <li><strong>严厉主持人</strong>：主动挑起争议，推动激烈辩论</li>
+              <li><strong>激进创新者</strong>：挑战传统，提出颠覆性观点</li>
+              <li><strong>尖锐批评家</strong>：无情批评，寻找观点漏洞</li>
+              <li><strong>冷酷分析师</strong>：用数据和逻辑拆解错误观点</li>
+              <li><strong>严格整合者</strong>：深挖冲突，拒绝表面妥协</li>
+              <li><strong>务实质疑者</strong>：质疑不切实际的想法</li>
+              <li><strong>权威专家</strong>：用专业知识无情批判</li>
+            </ul>
+            <p><strong>注意</strong>：这些角色被设计为产生建设性冲突，促进深度思考，而非恶意攻击。</p>
+          </div>
+        </div>
+      )}
+
+      {configMode === 'enterprise' && (
+        <div className="config-info">
+          <div className="info-box enterprise-mode">
+            <h3>🏢 企业智能体群配置说明</h3>
+            <p>本系统模拟完整的企业组织架构，包含8个专业角色，按照真实企业决策流程进行结构化讨论：</p>
+            <div className="enterprise-roles">
+              <div className="role-category">
+                <h4>👔 高层决策</h4>
+                <ul>
+                  <li><strong>CEO/总经理</strong>：战略决策者，拥有最终决策权</li>
+                </ul>
+              </div>
+              <div className="role-category">
+                <h4>🎯 核心业务</h4>
+                <ul>
+                  <li><strong>产品经理</strong>：用户需求分析，产品策略规划</li>
+                  <li><strong>技术总监</strong>：技术方案设计，可行性评估</li>
+                  <li><strong>市场总监</strong>：市场分析，竞争策略制定</li>
+                </ul>
+              </div>
+              <div className="role-category">
+                <h4>💼 支持职能</h4>
+                <ul>
+                  <li><strong>财务总监</strong>：成本控制，投资回报分析</li>
+                  <li><strong>人力资源总监</strong>：团队建设，人力配置</li>
+                  <li><strong>运营总监</strong>：执行计划，流程优化</li>
+                  <li><strong>质量保证经理</strong>：风险评估，质量控制</li>
+                </ul>
+              </div>
+            </div>
+            <p><strong>特点</strong>：结构化决策流程，8轮讨论涵盖问题分析→方案设计→执行规划→决策总结四个阶段。</p>
+          </div>
+        </div>
+      )}
       
       <div className="mcp-services">
         <h3>选择MCP服务</h3>
@@ -338,8 +417,16 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
       </div>
       
       {agentList.map((agent, index) => (
-        <div key={agent.id} className="agent-item">
-          <h3>智能体 {index + 1}</h3>
+        <div key={agent.id} className={`agent-item ${configMode === 'enterprise' ? 'enterprise-agent' : ''}`} 
+             style={configMode === 'enterprise' && agent.color ? { borderLeftColor: agent.color } : {}}>
+          <h3>
+            {configMode === 'enterprise' && agent.avatar && (
+              <span className="agent-avatar" style={{ backgroundColor: agent.color + '20' }}>
+                {agent.avatar}
+              </span>
+            )}
+            {configMode === 'enterprise' ? `${agent.name} (${agent.role})` : `智能体 ${index + 1}`}
+          </h3>
           
           <div className="form-group">
             <label>名称:</label>

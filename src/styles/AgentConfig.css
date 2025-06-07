@@ -358,4 +358,111 @@
     align-self: stretch;
     text-align: center;
   }
+}
+
+/* 企业模式样式 */
+.config-mode-selector {
+  margin-bottom: 20px;
+}
+
+.config-mode-selector h3 {
+  margin-bottom: 15px;
+  color: var(--text-color);
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.mode-button {
+  flex: 1;
+  padding: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.mode-button:hover {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color-light);
+}
+
+.mode-button.active {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.mode-description {
+  font-size: 12px;
+  font-weight: normal;
+  opacity: 0.8;
+}
+
+.enterprise-mode .enterprise-roles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.role-category {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.role-category h4 {
+  margin-bottom: 10px;
+  color: var(--primary-color);
+  font-size: 14px;
+}
+
+.role-category ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.role-category li {
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.enterprise-agent {
+  border-left-width: 4px !important;
+  position: relative;
+}
+
+.agent-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 10px;
+  font-size: 18px;
+  vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+  .mode-buttons {
+    flex-direction: column;
+  }
+  
+  .enterprise-mode .enterprise-roles {
+    grid-template-columns: 1fr;
+  }
 } 
