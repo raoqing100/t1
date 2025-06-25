@@ -1,33 +1,65 @@
-// 主题配置文件
+// 主题配置文件 - 现代渐变风 + 玻璃质感
 
-// 明亮主题
+// 明亮主题 - 现代渐变风
 const lightTheme = {
   colors: {
-    primary: '#4A6FA5',
-    secondary: '#47B881',
-    error: '#D14343',
-    warning: '#F7D154',
-    success: '#47B881',
-    background: '#f5f7fa',
-    surface: '#ffffff',
-    text: '#333333',
-    textSecondary: '#666666',
-    border: '#e0e0e0',
-    divider: '#eeeeee',
-    disabled: '#cccccc',
+    // 主要品牌色 - 渐变蓝紫
+    primary: '#6366f1',
+    primaryLight: '#8b5cf6',
+    primaryDark: '#4f46e5',
+    primaryGradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
     
-    // 角色颜色
+    // 次要色 - 青蓝渐变
+    secondary: '#06b6d4',
+    secondaryLight: '#0891b2',
+    secondaryDark: '#0e7490',
+    secondaryGradient: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+    
+    // 状态色 - 柔和版本
+    success: '#10b981',
+    successGradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+    warning: '#f59e0b',
+    warningGradient: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
+    error: '#ef4444',
+    errorGradient: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
+    
+    // 背景色系 - 玻璃质感
+    background: '#fafafb',
+    backgroundGradient: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+    surface: 'rgba(255, 255, 255, 0.8)',
+    surfaceGlass: 'rgba(255, 255, 255, 0.25)',
+    surfaceHover: 'rgba(255, 255, 255, 0.9)',
+    
+    // 文字色系 - 高对比度
+    text: '#1e293b',
+    textSecondary: '#64748b',
+    textMuted: '#94a3b8',
+    textInverse: '#ffffff',
+    
+    // 边框和分割线 - 透明度
+    border: 'rgba(148, 163, 184, 0.2)',
+    borderHover: 'rgba(148, 163, 184, 0.3)',
+    divider: 'rgba(148, 163, 184, 0.15)',
+    
+    // 玻璃质感专用色
+    glass: {
+      backdrop: 'rgba(255, 255, 255, 0.1)',
+      border: 'rgba(255, 255, 255, 0.2)',
+      shadow: 'rgba(0, 0, 0, 0.1)',
+      highlight: 'rgba(255, 255, 255, 0.6)'
+    },
+    
+    // 智能体角色色彩 - 渐变版本
     roles: {
-      '主持人': '#4A6FA5',
-      '创意者': '#47B881',
-      '批评者': '#D14343',
-      '整合者': '#9F7AEA',
-      '分析者': '#3182CE',
-      '执行者': '#DD6B20',
-      '协调者': '#38A169',
-      '专家': '#805AD5',
-      '记录者': '#718096',
-      '系统': '#4A5568'
+      '主持人': 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+      '战略分析师': 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)',
+      '技术专家': 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+      '市场顾问': 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
+      '风险评估师': 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
+      '创新顾问': 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+      '数据分析师': 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+      '协调者': 'linear-gradient(135deg, #84cc16 0%, #65a30d 100%)',
+      '系统': 'linear-gradient(135deg, #64748b 0%, #475569 100%)'
     },
     
     // 账号级别颜色
@@ -44,76 +76,142 @@ const lightTheme = {
       unavailable: '#ff6b6b' // 红色
     },
     
-    // 主题颜色变体
-    primaryLight: '#5B8AD9',
-    primaryDark: '#3A5A84',
-    secondaryLight: '#58D99E',
-    secondaryDark: '#389A6A'
+
   },
+  
+  // 玻璃质感效果
+  glass: {
+    backdrop: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    shadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    background: 'rgba(255, 255, 255, 0.25)'
+  },
+  
+  // 阴影系统 - 多层次
   shadows: {
-    small: '0 1px 3px rgba(0,0,0,0.1)',
-    medium: '0 2px 6px rgba(0,0,0,0.15)',
-    large: '0 4px 12px rgba(0,0,0,0.15)'
+    xs: '0 1px 2px rgba(0, 0, 0, 0.05)',
+    sm: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+    md: '0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06)',
+    lg: '0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)',
+    xl: '0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04)',
+    glass: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    glow: '0 0 20px rgba(99, 102, 241, 0.3)'
   },
+  
+  // 间距系统
   spacing: {
-    xs: '0.25rem',
-    sm: '0.5rem',
-    md: '1rem',
-    lg: '1.5rem',
-    xl: '2rem'
+    xs: '0.25rem',   // 4px
+    sm: '0.5rem',    // 8px
+    md: '1rem',      // 16px
+    lg: '1.5rem',    // 24px
+    xl: '2rem',      // 32px
+    '2xl': '3rem',   // 48px
+    '3xl': '4rem'    // 64px
   },
+  
+  // 圆角系统
   borderRadius: {
-    small: '4px',
-    medium: '8px',
-    large: '12px',
-    round: '50%'
+    none: '0',
+    sm: '0.25rem',   // 4px
+    md: '0.5rem',    // 8px
+    lg: '0.75rem',   // 12px
+    xl: '1rem',      // 16px
+    '2xl': '1.5rem', // 24px
+    full: '9999px'
   },
+  
+  // 字体系统
   typography: {
-    fontFamily: "'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif",
-    fontSizes: {
-      xs: '0.75rem',
-      sm: '0.875rem',
-      md: '1rem',
-      lg: '1.25rem',
-      xl: '1.5rem',
-      xxl: '2rem'
+    fontFamily: {
+      sans: "'Inter', 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', sans-serif",
+      mono: "'JetBrains Mono', 'SF Mono', 'Consolas', monospace"
     },
-    fontWeights: {
+    fontSize: {
+      xs: '0.75rem',   // 12px
+      sm: '0.875rem',  // 14px
+      base: '1rem',    // 16px
+      lg: '1.125rem',  // 18px
+      xl: '1.25rem',   // 20px
+      '2xl': '1.5rem', // 24px
+      '3xl': '1.875rem', // 30px
+      '4xl': '2.25rem'   // 36px
+    },
+    fontWeight: {
+      light: 300,
       normal: 400,
       medium: 500,
-      bold: 700
+      semibold: 600,
+      bold: 700,
+      extrabold: 800
+    },
+    lineHeight: {
+      tight: 1.25,
+      normal: 1.5,
+      relaxed: 1.75
     }
   }
 };
 
-// 暗色主题
+// 暗色主题 - 深邃玻璃风
 const darkTheme = {
   colors: {
-    primary: '#5B8AD9',
-    secondary: '#4CC38A',
-    error: '#E05252',
-    warning: '#F7D154',
-    success: '#4CC38A',
-    background: '#121212',
-    surface: '#1E1E1E',
-    text: '#E0E0E0',
-    textSecondary: '#A0A0A0',
-    border: '#333333',
-    divider: '#2A2A2A',
-    disabled: '#555555',
+    // 主要品牌色 - 更亮的渐变
+    primary: '#7c3aed',
+    primaryLight: '#a855f7',
+    primaryDark: '#6d28d9',
+    primaryGradient: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
     
-    // 角色颜色 - 暗色模式下稍微调亮
+    // 次要色
+    secondary: '#0ea5e9',
+    secondaryLight: '#38bdf8',
+    secondaryDark: '#0284c7',
+    secondaryGradient: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
+    
+    // 状态色
+    success: '#22c55e',
+    successGradient: 'linear-gradient(135deg, #22c55e 0%, #4ade80 100%)',
+    warning: '#f97316',
+    warningGradient: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
+    error: '#f43f5e',
+    errorGradient: 'linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)',
+    
+    // 背景色系 - 深色玻璃
+    background: '#0f172a',
+    backgroundGradient: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+    surface: 'rgba(30, 41, 59, 0.8)',
+    surfaceGlass: 'rgba(30, 41, 59, 0.4)',
+    surfaceHover: 'rgba(30, 41, 59, 0.9)',
+    
+    // 文字色系
+    text: '#f8fafc',
+    textSecondary: '#cbd5e1',
+    textMuted: '#94a3b8',
+    textInverse: '#1e293b',
+    
+    // 边框和分割线
+    border: 'rgba(203, 213, 225, 0.2)',
+    borderHover: 'rgba(203, 213, 225, 0.3)',
+    divider: 'rgba(203, 213, 225, 0.1)',
+    
+    // 玻璃质感专用色
+    glass: {
+      backdrop: 'rgba(30, 41, 59, 0.2)',
+      border: 'rgba(255, 255, 255, 0.1)',
+      shadow: 'rgba(0, 0, 0, 0.3)',
+      highlight: 'rgba(255, 255, 255, 0.1)'
+    },
+    
+    // 智能体角色色彩 - 暗色渐变版本
     roles: {
-      '主持人': '#5B8AD9',
-      '创意者': '#4CC38A',
-      '批评者': '#E05252',
-      '整合者': '#B68BFF',
-      '分析者': '#4A9EFF',
-      '执行者': '#FF8B3E',
-      '协调者': '#4BD889',
-      '专家': '#9B7AE6',
-      '记录者': '#8FA3B7',
-      '系统': '#6B7280'
+      '主持人': 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+      '战略分析师': 'linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%)',
+      '技术专家': 'linear-gradient(135deg, #22c55e 0%, #4ade80 100%)',
+      '市场顾问': 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
+      '风险评估师': 'linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)',
+      '创新顾问': 'linear-gradient(135deg, #a855f7 0%, #c084fc 100%)',
+      '数据分析师': 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)',
+      '协调者': 'linear-gradient(135deg, #84cc16 0%, #a3e635 100%)',
+      '系统': 'linear-gradient(135deg, #64748b 0%, #94a3b8 100%)'
     },
     
     // 账号级别颜色 - 暗色模式下调亮
@@ -130,17 +228,28 @@ const darkTheme = {
       unavailable: '#FF8080' // 红色
     },
     
-    // 主题颜色变体
-    primaryLight: '#7AA3E9',
-    primaryDark: '#4A6FA5',
-    secondaryLight: '#6EDAA6',
-    secondaryDark: '#3A9A6E'
+
   },
+  
+  // 暗色玻璃质感
+  glass: {
+    backdrop: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    shadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+    background: 'rgba(30, 41, 59, 0.4)'
+  },
+  
+  // 暗色阴影
   shadows: {
-    small: '0 1px 3px rgba(0,0,0,0.3)',
-    medium: '0 2px 6px rgba(0,0,0,0.4)',
-    large: '0 4px 12px rgba(0,0,0,0.5)'
+    xs: '0 1px 2px rgba(0, 0, 0, 0.1)',
+    sm: '0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1)',
+    md: '0 4px 6px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)',
+    lg: '0 10px 15px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.1)',
+    xl: '0 20px 25px rgba(0, 0, 0, 0.3), 0 10px 10px rgba(0, 0, 0, 0.1)',
+    glass: '0 8px 32px rgba(0, 0, 0, 0.3)',
+    glow: '0 0 20px rgba(124, 58, 237, 0.4)'
   },
+  
   spacing: lightTheme.spacing,
   borderRadius: lightTheme.borderRadius,
   typography: lightTheme.typography

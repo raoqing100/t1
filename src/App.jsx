@@ -15,7 +15,7 @@ function AgentConfigWrapper({ configuredAgents, setConfiguredAgents }) {
   const handleAgentsConfigured = (agents) => {
     setConfiguredAgents(agents);
     console.log('智能体配置完成:', agents);
-    // 导航到聊天室
+    // 导航到讨论大厅
     navigate('/chat');
   };
   

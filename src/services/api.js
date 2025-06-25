@@ -22,6 +22,98 @@ const MODEL_ACCESS_LEVELS = {
 };
 
 /**
+ * 检查是否为推理模型
+ * @param {string} model - 模型名称
+ * @returns {boolean} 是否为推理模型
+ */
+export const isReasoningModel = (model) => {
+  if (!model) return false;
+  
+  const reasoningModels = [
+    'deepseek-ai/DeepSeek-R1',
+    'deepseek-ai/DeepSeek-R1-Distill',
+    'Qwen/QwQ-32B-Preview',
+    'o1-preview',
+    'o1-mini'
+  ];
+  
+  const modelLower = model.toLowerCase();
+  return reasoningModels.some(reasoningModel => 
+    modelLower.includes(reasoningModel.toLowerCase()) ||
+    modelLower.includes('r1') ||
+    modelLower.includes('qwq') ||
+    modelLower.includes('reasoning')
+  );
+};
+
+/**
+ * 解析推理模型的响应，分离思考过程和最终答案
+ * @param {string} content - 模型响应内容
+ * @returns {Object} 包含thinking和answer的对象
+ */
+export const parseReasoningResponse = (content) => {
+  if (!content) return { thinking: '', answer: content };
+  
+  // DeepSeek-R1 的思考过程通常在 <think> 标签中
+  const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+  
+  if (thinkMatch) {
+    const thinking = thinkMatch[1].trim();
+    const answer = content.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+    return { thinking, answer };
+  }
+  
+  // QwQ 和其他推理模型的思考过程可能用其他格式
+  const reasoningPatterns = [
+    /【思考过程】([\s\S]*?)【最终答案】([\s\S]*)/,
+    /思考：([\s\S]*?)回答：([\s\S]*)/,
+    /Let me think([\s\S]*?)(?:Answer|Final answer|结论)：?([\s\S]*)/i,
+    /Reasoning:([\s\S]*?)(?:Answer|Conclusion):([\s\S]*)/i
+  ];
+  
+  for (const pattern of reasoningPatterns) {
+    const match = content.match(pattern);
+    if (match) {
+      return {
+        thinking: match[1].trim(),
+        answer: match[2].trim()
+      };
+    }
+  }
+  
+  // 如果没有明确的分隔符，尝试智能分割（针对长文本）
+  if (content.length > 300) {
+    const lines = content.split('\n');
+    const thinkingKeywords = ['思考', 'think', '分析', 'analyze', '考虑', 'consider', 'reasoning'];
+    const answerKeywords = ['答案', 'answer', '结论', 'conclusion', '回答', 'response', 'final'];
+    
+    let thinkingEnd = -1;
+    let answerStart = -1;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].toLowerCase();
+      if (thinkingKeywords.some(keyword => line.includes(keyword)) && thinkingEnd === -1) {
+        thinkingEnd = i;
+      }
+      if (answerKeywords.some(keyword => line.includes(keyword)) && answerStart === -1) {
+        answerStart = i;
+        break;
+      }
+    }
+    
+    if (thinkingEnd >= 0 && answerStart > thinkingEnd) {
+      return {
+        thinking: lines.slice(0, answerStart).join('\n').trim(),
+        answer: lines.slice(answerStart).join('\n').trim()
+      };
+    }
+  }
+  
+  // 如果无法分离，返回原内容作为答案
+  return { thinking: '', answer: content };
+};
+
+/**
  * 创建API请求头
  * @param {string} apiKey - API密钥
  * @returns {Object} - 请求头对象

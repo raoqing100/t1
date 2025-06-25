@@ -63,12 +63,12 @@ const Home = () => {
   return (
     <div className="home">
       <section className="hero">
-        <h1>AI多智能体聊天系统</h1>
-        <p className="subtitle">配置多个AI智能体，让它们一起讨论任何话题</p>
+        <h1>企业多智能大脑系统</h1>
+          <p className="subtitle">企业级AI智能体协作平台，实现深度讨论与知识创新</p>
         
         <div className="cta-buttons">
           <Link to="/config" className="cta-button primary">开始配置</Link>
-          <Link to="/chat" className="cta-button secondary">进入聊天室</Link>
+          <Link to="/chat" className="cta-button secondary">进入讨论大厅</Link>
         </div>
       </section>
       

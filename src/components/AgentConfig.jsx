@@ -1,76 +1,185 @@
 import React, { useState, useEffect } from 'react';
-import { mcpServices } from '../services/mcpServices';
-import ModelSelector from './ModelSelector';
+import { moderatorConfigStorage } from '../services/localStorage';
 import { saveApiKey, getApiKey, saveAgentConfig, getAgentConfigList, getAgentConfigById } from '../services/localStorage';
-import { ENTERPRISE_AGENT_CONFIG } from '../config/enterpriseAgents';
-import '../styles/AgentConfig.css';
 
-/**
- * 代理配置组件
- * @param {Object} props - 组件属性
- * @param {Array} props.agents - 代理列表
- * @param {Function} props.onAgentsConfigured - 代理配置完成回调
- * @returns {JSX.Element} - 渲染的组件
- */
+// MCP服务列表（预留扩展功能）
+// const mcpServices = [
+//   { id: 'openai', name: 'OpenAI API', endpoint: 'https://api.openai.com/v1' },
+//   { id: 'claude', name: 'Claude API', endpoint: 'https://api.anthropic.com' },
+//   { id: 'gemini', name: 'Google Gemini', endpoint: 'https://generativelanguage.googleapis.com' },
+//   { id: 'local', name: '本地部署', endpoint: 'http://localhost:8080' }
+// ];
+
 const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
-  // 获取默认配置（不依赖localStorage）
+  // 角色模板定义
+  const roleTemplates = {
+    // 智慧协调模式角色
+    '战略分析师': {
+      name: '战略思维者',
+      description: '你是一个深度战略思维专家，专注于从宏观和长远角度分析问题。你的使命是：1）识别问题的根本原因和深层结构 2）分析各种方案的长期影响和战略意义 3）提出具有前瞻性的解决框架 4）评估不同选择的机会成本和风险收益 5）在复杂性中寻找关键的突破点。你善于在博弈中寻找多赢的策略空间，用系统性思维指导讨论方向。每次发言字数不超过200字。'
+    },
+    '创新专家': {
+      name: '创新催化者',
+      description: '你是一个富有创造力的创新引导者，专门激发突破性思维。你的职责是：1）提出跳出框架的全新视角和解决路径 2）挑战传统假设，启发逆向和侧向思维 3）整合跨领域的知识和经验，产生创新灵感 4）在看似无关的概念间建立创造性连接 5）推动从"是什么"向"可能是什么"的思维转换。你通过建设性的挑战推动创新，而非破坏性的否定。每次发言字数不超过200字。'
+    },
+    '质量控制专家': {
+      name: '严谨验证者',
+      description: '你是一个逻辑严密的质量守门人，确保讨论的准确性和严谨性。你的任务是：1）识别论证中的逻辑漏洞和证据不足 2）要求提供具体数据、案例和可验证的支撑材料 3）检查假设的合理性和结论的可靠性 4）指出可能的偏见、盲点和错误推理 5）确保每个重要观点都经过充分的论证检验。你通过建设性的质疑提升讨论质量，而非为了质疑而质疑。每次发言字数不超过200字。'
+    },
+    '执行策略专家': {
+      name: '实践整合者',
+      description: '你是一个将理论转化为实践的桥梁建设者，专注于可操作性。你的使命是：1）评估方案的可行性和实施难度 2）识别执行过程中的关键节点和潜在障碍 3）设计具体的实施路径和资源配置方案 4）平衡理想目标与现实约束，寻找最优实现路径 5）确保抽象讨论能转化为具体行动计划。你在博弈中寻求实用与理想的最佳平衡点。每次发言字数不超过200字。'
+    },
+    '共识建设专家': {
+      name: '协调整合者',
+      description: '你是一个善于在分歧中寻找共同点的协调大师，专注于建设性整合。你的职责是：1）识别不同观点背后的共同价值和目标 2）寻找看似对立观点间的互补性和协同潜力 3）设计能够融合多方智慧的综合方案 4）化解冲突为合作，将竞争转化为协作 5）构建让各方都能接受和贡献的解决框架。你通过智慧的协调实现集体智慧的最大化。每次发言字数不超过200字。'
+    },
+    '全局分析师': {
+      name: '多元视角者',
+      description: '你是一个具有全方位视野的多维度思考者，专门拓展讨论的广度和深度。你的任务是：1）从不同利益相关者的角度分析问题 2）考虑短期、中期、长期的不同时间维度影响 3）整合技术、经济、社会、文化等多重因素 4）识别被忽视的重要方面和潜在连锁反应 5）确保讨论覆盖问题的各个重要维度。你像一个智慧的探照灯，照亮讨论的盲区。每次发言字数不超过200字。'
+    },
+    '伦理顾问': {
+      name: '价值引导者',
+      description: '你是一个具有深厚智慧的价值守护者，确保讨论不偏离正确的价值导向。你的使命是：1）分析不同方案的伦理影响和道德考量 2）评估决策对各方福祉和社会整体利益的影响 3）确保解决方案符合公平、正义、可持续发展等基本价值原则 4）在效率与公平、创新与稳定间寻找平衡 5）引导讨论向着更高层次的价值目标发展。你是团队的道德罗盘和智慧之光。每次发言字数不超过200字。'
+    },
+
+    // 企业决策模式角色
+    '首席执行官': {
+      name: 'CEO',
+      description: '你是企业的最高决策者，负责制定企业总体战略方向和重大决策。你的职责包括：1）从全局视角审视企业发展战略和市场机遇 2）平衡股东利益、员工福利和社会责任 3）做出影响企业长远发展的关键决策 4）确保企业在激烈竞争中保持优势地位 5）承担最终决策责任，推动企业持续增长。你具备敏锐的商业嗅觉和卓越的领导力，能在复杂环境中做出明智决策。每次发言字数不超过200字。'
+    },
+    '首席技术官': {
+      name: 'CTO',
+      description: '你是企业的技术领导者，负责技术战略规划和创新驱动。你的使命是：1）制定企业技术发展路线图和架构规划 2）评估新技术对业务的潜在影响和应用价值 3）领导技术团队攻克关键技术难题 4）确保技术投入产出比和创新效果最大化 5）推动技术与业务的深度融合。你拥有深厚的技术功底和前瞻性技术视野，能将复杂技术转化为商业价值。每次发言字数不超过200字。'
+    },
+    '首席财务官': {
+      name: 'CFO',
+      description: '你是企业的财务管理专家，负责资金规划和财务风险控制。你的核心职能：1）分析财务数据，评估投资回报率和财务风险 2）制定预算计划，优化资源配置和成本结构 3）监控现金流，确保企业财务健康和流动性 4）评估融资方案，平衡债务与股权结构 5）为重大决策提供财务建议和数据支撑。你以数据说话，用财务角度解析商业决策的可行性和价值。每次发言字数不超过200字。'
+    },
+    '首席营销官': {
+      name: 'CMO',
+      description: '你是市场营销和品牌建设的领导者，负责提升企业市场影响力。你的专业领域：1）分析市场趋势和消费者行为，制定营销战略 2）打造品牌形象，提升品牌价值和市场认知度 3）设计营销活动，提高客户获取和留存率 4）监控营销效果，优化营销投入产出比 5）洞察竞争对手动态，制定差异化竞争策略。你善于将创意转化为商业成果，用营销思维驱动业务增长。每次发言字数不超过200字。'
+    },
+    '首席运营官': {
+      name: 'COO',
+      description: '你是企业运营管理的核心，负责日常运营和流程优化。你的管理重点：1）优化业务流程，提升运营效率和服务质量 2）协调各部门协作，确保企业整体运营顺畅 3）监控关键绩效指标，持续改进运营管理体系 4）管理供应链和合作伙伴关系，降低运营成本 5）推动数字化转型，提升企业运营能力。你具备丰富的管理经验和执行力，能将战略目标转化为具体的运营成果。每次发言字数不超过200字。'
+    },
+    '产品总监': {
+      name: '产品负责人',
+      description: '你是产品策略和用户体验的专家，负责产品全生命周期管理。你的产品思维：1）深入了解用户需求，设计满足市场需求的产品功能 2）制定产品路线图，平衡功能创新与技术可行性 3）协调研发、设计、运营团队，确保产品按时交付 4）分析产品数据，持续优化用户体验和产品价值 5）洞察行业趋势，保持产品竞争优势。你以用户为中心，用产品思维解决商业问题。每次发言字数不超过200字。'
+    },
+    '人力资源总监': {
+      name: 'CHRO',
+      description: '你是人才管理和组织发展的专家，负责企业人力资源战略。你的核心任务：1）制定人才招聘和培养策略，建设高绩效团队 2）设计薪酬福利体系，激励员工创造更大价值 3）推动企业文化建设，营造积极向上的工作氛围 4）管理员工关系，处理劳资纠纷和冲突问题 5）规划组织架构调整，支持企业战略发展需要。你理解人性，善于激发团队潜能，用人力资源管理推动企业发展。每次发言字数不超过200字。'
+    },
+    '法务总监': {
+      name: '首席法务官',
+      description: '你是企业法律风险管控的专家，负责法律合规和风险防范。你的专业职责：1）评估商业决策的法律风险，提供合规建议 2）起草和审核重要合同，保护企业合法权益 3）处理诉讼纠纷，维护企业声誉和利益 4）监控法律法规变化，确保企业经营合规 5）建立法律风险防控体系，降低企业法律风险。你具备扎实的法律功底和商业思维，能在复杂的法律环境中保护企业利益。每次发言字数不超过200字。'
+    }
+  };
+
+  // 获取当前模式的角色列表
+  const getCurrentModeRoles = () => {
+    if (configMode === 'enterprise') {
+      return ['首席执行官', '首席技术官', '首席财务官', '首席营销官', '首席运营官', '产品总监', '人力资源总监', '法务总监'];
+    } else {
+      return ['战略分析师', '创新专家', '质量控制专家', '执行策略专家', '共识建设专家', '全局分析师', '伦理顾问'];
+    }
+  };
+
   const getDefaultAgents = () => {
+    const currentRoles = getCurrentModeRoles();
+    
+    return currentRoles.map((role, index) => ({
+      id: `agent${index + 1}`,
+      name: roleTemplates[role].name,
+      role: role,
+      apiKey: '',
+      model: '',
+      description: roleTemplates[role].description
+    }));
+  };
+
+  // 切换配置模式时更新智能体配置
+  const handleModeChange = (newMode) => {
+    if (newMode !== configMode) {
+      setConfigMode(newMode);
+      
+      // 自动更新智能体配置以匹配新模式
+      const newAgents = newMode === 'enterprise' ? 
+        getEnterpriseAgents() : getDefaultAgents();
+      
+      setAgentList(newAgents);
+      saveAgentsConfig(newAgents);
+    }
+  };
+
+  // 获取企业模式的默认智能体配置
+  const getEnterpriseAgents = () => {
     return [
       { 
         id: 'agent1', 
-        name: '严厉主持人', 
-        role: '主持人', 
+        name: 'CEO', 
+        role: '首席执行官', 
         apiKey: '', 
-        model: '', 
-        description: '你是一个严格的讨论主持人，绝不允许表面化的讨论。你必须：1）主动挑起争议话题，推动深入辩论 2）当讨论过于和谐时立即介入，要求参与者提出更尖锐的观点 3）不接受模糊或敷衍的回答，强制要求具体论证 4）故意制造观点冲突，让不同角色产生激烈辩论 5）严厉质疑任何未经充分论证的结论。你的目标是确保每个话题都能产生深度的思辨冲突。' 
+        model: 'deepseek-ai/DeepSeek-V3', 
+        description: roleTemplates['首席执行官'].description
       },
       { 
         id: 'agent2', 
-        name: '激进创新者', 
-        role: '创意者', 
+        name: 'CTO', 
+        role: '首席技术官', 
         apiKey: '', 
-        model: '', 
-        description: '你是一个激进的创新思维者，专门挑战传统和保守思维。你必须：1）对任何传统方案都要提出激烈反对，认为它们过时无效 2）提出极端前卫的解决方案，即使看起来不切实际 3）嘲讽保守的想法，用犀利的语言批评缺乏创新的观点 4）故意提出颠覆性的建议来刺激讨论 5）绝不妥协于"安全"的中庸方案。你要用挑衅性的语言推动创新思维。' 
+        model: 'Qwen/QwQ-32B', 
+        description: roleTemplates['首席技术官'].description
       },
       { 
         id: 'agent3', 
-        name: '尖锐批评家', 
-        role: '批评者', 
+        name: 'CFO', 
+        role: '首席财务官', 
         apiKey: '', 
-        model: '', 
-        description: '你是一个无情的批评家，专门寻找并攻击他人观点的漏洞。你必须：1）对每个提案都要找出至少3个严重缺陷 2）用尖锐的语言指出逻辑错误和不合理假设 3）绝不轻易认同任何观点，总是持怀疑态度 4）主动挑战其他人的专业能力和知识基础 5）用犀利的反问来拆解对方的论证。你的使命是通过无情批评来暴露问题的本质。' 
+        model: 'Qwen/Qwen2.5-72B-Instruct', 
+        description: roleTemplates['首席财务官'].description
       },
       { 
         id: 'agent4', 
-        name: '冷酷分析师', 
-        role: '分析者', 
+        name: 'CMO', 
+        role: '首席营销官', 
         apiKey: '', 
-        model: '', 
-        description: '你是一个冷酷的数据分析师，用严谨的逻辑无情拆解错误观点。你必须：1）要求所有观点都提供具体数据支撑，否则直接驳回 2）用统计学和逻辑学原理严厉批评不严谨的推理 3）指出其他人论证中的数据缺陷和逻辑漏洞 4）拒绝接受基于情感或直觉的判断 5）用冰冷的事实和数据打击不切实际的想法。你要让讨论回归理性和严谨。' 
+        model: 'deepseek-ai/DeepSeek-V2.5', 
+        description: roleTemplates['首席营销官'].description
       },
       { 
         id: 'agent5', 
-        name: '严格整合者', 
-        role: '整合者', 
+        name: 'COO', 
+        role: '首席运营官', 
         apiKey: '', 
-        model: '', 
-        description: '你是一个严格的观点整合者，绝不接受表面的妥协和和谐。你必须：1）深挖不同观点之间的根本冲突，不允许回避核心分歧 2）强制要求各方为自己的立场提供更强有力的论证 3）拒绝接受"各有道理"的和稀泥态度 4）主动放大观点间的矛盾，推动更深层的辩论 5）只有在经过激烈辩论后才考虑整合方案。你要确保整合是基于深度思辨而非表面妥协。' 
+        model: 'Qwen/Qwen2.5-32B-Instruct', 
+        description: roleTemplates['首席运营官'].description
       },
       { 
         id: 'agent6', 
-        name: '务实质疑者', 
-        role: '执行者', 
+        name: '产品负责人', 
+        role: '产品总监', 
         apiKey: '', 
-        model: '', 
-        description: '你是一个严厉的执行专家，专门质疑和攻击不切实际的想法。你必须：1）对任何缺乏可执行性的方案进行无情批评 2）用现实的残酷性来打击理想主义的幻想 3）强调资源限制、时间压力和实际困难 4）嘲讽那些只会纸上谈兵的理论家 5）要求所有提案都要有详细的执行计划和风险评估。你要用现实的铁锤砸碎不切实际的泡沫。' 
+        model: 'THUDM/GLM-4-32B-0414', 
+        description: roleTemplates['产品总监'].description
       },
       { 
         id: 'agent7', 
-        name: '权威专家', 
-        role: '专家', 
+        name: 'CHRO', 
+        role: '人力资源总监', 
         apiKey: '', 
-        model: '', 
-        description: '你是一个权威的专业专家，对错误观点进行无情的专业批判。你必须：1）用深厚的专业知识无情批评外行的错误观点 2）指出其他人在专业领域的无知和误解 3）用权威的专业标准来否定不符合规范的建议 4）不容忍任何专业上的妥协和降低标准 5）用专业的严谨性来碾压业余的想法。你要维护专业的尊严和标准的严格性。' 
+        model: 'Qwen/Qwen2.5-14B-Instruct', 
+        description: roleTemplates['人力资源总监'].description
+      },
+      { 
+        id: 'agent8', 
+        name: '首席法务官', 
+        role: '法务总监', 
+        apiKey: '', 
+        model: 'Qwen/Qwen2.5-7B-Instruct', 
+        description: roleTemplates['法务总监'].description
       }
     ];
   };
@@ -90,7 +199,16 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
     } catch (error) {
       console.error('加载保存的智能体配置失败:', error);
     }
-    return getDefaultAgents();
+    // 使用智慧协调模式作为默认
+    const customRoles = ['战略分析师', '创新专家', '质量控制专家', '执行策略专家', '共识建设专家', '全局分析师', '伦理顾问'];
+    return customRoles.map((role, index) => ({
+      id: `agent${index + 1}`,
+      name: roleTemplates[role].name,
+      role: role,
+      apiKey: '',
+      model: '',
+      description: roleTemplates[role].description
+    }));
   };
 
   const [agentList, setAgentList] = useState(() => {
@@ -104,50 +222,45 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
       localStorage.setItem('hasVisitedAgentConfig', 'true');
       // 清除可能存在的旧配置
       localStorage.removeItem('savedAgents');
+      // 返回智慧协调模式的默认配置
+      const defaultAgents = getDefaultAgents();
+      return defaultAgents;
     }
     
     return loadSavedAgents();
   });
-  const [selectedMcpService, setSelectedMcpService] = useState('');
-  const [accountTier, setAccountTier] = useState(() => {
-    return localStorage.getItem('accountTier') || 'free';
-  });
-  const [savedConfigs, setSavedConfigs] = useState([]);
-  const [configName, setConfigName] = useState('');
+  const [configMode, setConfigMode] = useState('custom'); // 'custom' | 'enterprise'
+  const [showModeratorConfig, setShowModeratorConfig] = useState(false);
+  const [moderatorConfig, setModeratorConfig] = useState(moderatorConfigStorage.getModeratorConfig());
+
+  // 新增状态管理
   const [showSaveConfigModal, setShowSaveConfigModal] = useState(false);
   const [showLoadConfigModal, setShowLoadConfigModal] = useState(false);
-  const [configMode, setConfigMode] = useState('custom'); // 'custom' | 'enterprise'
-
-  // 加载已保存的配置列表
-  useEffect(() => {
-    const configs = getAgentConfigList();
-    setSavedConfigs(configs);
-  }, []);
+  const [configName, setConfigName] = useState('');
+  const [configDescription, setConfigDescription] = useState('');
+  const [savedConfigs, setSavedConfigs] = useState([]);
 
   // 确保默认配置被保存
   useEffect(() => {
     if (agentList.length > 0) {
       saveAgentsConfig(agentList);
     }
+  }, [agentList]);
+
+  // 加载已保存的配置列表
+  useEffect(() => {
+    const loadSavedConfigs = () => {
+      try {
+        const configs = getAgentConfigList();
+        setSavedConfigs(configs);
+      } catch (error) {
+        console.error('加载配置列表失败:', error);
+      }
+    };
+    loadSavedConfigs();
   }, []);
   
-  // 处理MCP服务选择
-  const handleMcpServiceChange = (e) => {
-    setSelectedMcpService(e.target.value);
-    
-    // 如果选择了MCP服务，自动填充API密钥
-    if (e.target.value) {
-      const service = mcpServices.find(s => s.id === e.target.value);
-      if (service) {
-        // 更新所有代理的API密钥
-        const updatedAgents = agentList.map(agent => ({
-          ...agent,
-          apiKey: service.endpoint
-        }));
-        setAgentList(updatedAgents);
-      }
-    }
-  };
+
   
   // 保存智能体配置到localStorage
   const saveAgentsConfig = (agents) => {
@@ -166,10 +279,36 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
         }
       });
       
+      // 自动保存/更新"最近配置"
+      const recentConfig = {
+        name: '最近配置',
+        description: `最后更新时间: ${new Date().toLocaleString()}`,
+        agents: agents
+      };
+      
+      // 查找是否已存在"最近配置"
+      const savedConfigs = getAgentConfigList();
+      const recentConfigIndex = savedConfigs.findIndex(config => config.name === '最近配置');
+      
+      if (recentConfigIndex >= 0) {
+        // 更新现有的最近配置
+        recentConfig.id = savedConfigs[recentConfigIndex].id;
+        recentConfig.createdAt = savedConfigs[recentConfigIndex].createdAt;
+      }
+      
+      saveAgentConfig(recentConfig);
+      
       console.log('智能体配置已保存');
     } catch (error) {
-      console.error('保存智能体配置失败:', error);
+      console.error('保存智能体配置失败', error);
     }
+  };
+
+  // 处理主持人配置变更
+  const handleModeratorConfigChange = (field, value) => {
+    const newConfig = { ...moderatorConfig, [field]: value };
+    setModeratorConfig(newConfig);
+    moderatorConfigStorage.saveModeratorConfig(newConfig);
   };
 
   // 更新代理信息
@@ -179,428 +318,868 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
       ...updatedAgents[index],
       [field]: value
     };
+
+    // 如果更新的是角色，自动更新名称和描述
+    if (field === 'role' && roleTemplates[value]) {
+      updatedAgents[index].name = roleTemplates[value].name;
+      updatedAgents[index].description = roleTemplates[value].description;
+    }
+
     setAgentList(updatedAgents);
-    
-    // 自动保存配置
     saveAgentsConfig(updatedAgents);
   };
-  
-  // 添加新代理
+
+  // 添加智能体
   const addAgent = () => {
-    const newId = `agent${agentList.length + 1}`;
-    const updatedAgents = [...agentList, {
-      id: newId,
-      name: '',
-      role: '',
+    const currentRoles = getCurrentModeRoles();
+    const defaultRole = currentRoles[0];
+    
+    const newAgent = {
+      id: `agent${Date.now()}`,
+      name: roleTemplates[defaultRole].name,
+      role: defaultRole,
       apiKey: '',
       model: '',
-      description: ''
-    }];
+      description: roleTemplates[defaultRole].description
+    };
+
+    const updatedAgents = [...agentList, newAgent];
     setAgentList(updatedAgents);
     saveAgentsConfig(updatedAgents);
   };
-  
-  // 删除代理
+
+  // 删除智能体
   const removeAgent = (index) => {
     if (agentList.length <= 1) {
       alert('至少需要保留一个智能体');
       return;
     }
-    
-    const updatedAgents = [...agentList];
-    updatedAgents.splice(index, 1);
+
+    const updatedAgents = agentList.filter((_, i) => i !== index);
     setAgentList(updatedAgents);
     saveAgentsConfig(updatedAgents);
   };
 
-  // 保存当前配置为文件
-  const handleSaveConfig = () => {
+  // 重置为默认配置
+  const resetToDefault = () => {
+    if (window.confirm('确定要重置为默认配置吗？这将清除当前所有自定义设置。')) {
+      const defaultAgents = configMode === 'enterprise' ? getEnterpriseAgents() : getDefaultAgents();
+      setAgentList(defaultAgents);
+      saveAgentsConfig(defaultAgents);
+    }
+  };
+
+  // 保存配置（简单版本）
+  const saveConfiguration = () => {
+    setShowSaveConfigModal(true);
+  };
+
+  // 确认保存配置
+  const confirmSaveConfig = async () => {
     if (!configName.trim()) {
       alert('请输入配置名称');
       return;
     }
 
-    const isValid = agentList.some(agent => agent.name && agent.role);
-    if (!isValid) {
-      alert('请至少为一个智能体配置名称和角色');
+    try {
+      const configData = {
+        name: configName.trim(),
+        description: configDescription.trim(),
+        agents: agentList
+      };
+
+      const configId = saveAgentConfig(configData);
+      if (configId) {
+        alert('✅ 配置已保存成功！');
+        setShowSaveConfigModal(false);
+        setConfigName('');
+        setConfigDescription('');
+        
+        // 重新加载配置列表
+        const configs = getAgentConfigList();
+        setSavedConfigs(configs);
+      } else {
+        alert('❌ 保存配置失败，请重试');
+      }
+    } catch (error) {
+      console.error('保存配置失败:', error);
+      alert('❌ 保存配置失败，请检查并重试');
+    }
+  };
+
+  // 加载保存的配置
+  const loadSavedConfig = async (configId) => {
+    try {
+      const config = getAgentConfigById(configId);
+      if (config && config.agents) {
+        setAgentList(config.agents);
+        saveAgentsConfig(config.agents);
+        setShowLoadConfigModal(false);
+        alert(`✅ 配置"${config.name}"已加载成功！`);
+      } else {
+        alert('❌ 加载配置失败，配置可能已损坏');
+      }
+    } catch (error) {
+      console.error('加载配置失败:', error);
+      alert('❌ 加载配置失败，请重试');
+    }
+  };
+
+  // 启动聊天
+  const startChat = () => {
+    const validAgents = agentList.filter(agent => agent.name && agent.role && agent.apiKey && agent.model);
+    if (validAgents.length === 0) {
+      alert('请至少配置一个完整的智能体（包含名称、角色、API密钥和模型）');
       return;
     }
-
-    const config = {
-      name: configName,
-      description: `包含${agentList.length}个智能体的配置`,
-      agents: agentList
-    };
-
-    const configId = saveAgentConfig(config);
-    if (configId) {
-      alert('配置保存成功！');
-      setConfigName('');
-      setShowSaveConfigModal(false);
-      // 重新加载配置列表
-      const configs = getAgentConfigList();
-      setSavedConfigs(configs);
-    } else {
-      alert('配置保存失败');
-    }
+    
+    // 自动保存配置
+    saveAgentsConfig(agentList);
+    onAgentsConfigured(agentList);
   };
 
-  // 加载选中的配置
-  const handleLoadConfig = (configId) => {
-    const config = getAgentConfigById(configId);
-    if (config && config.agents) {
-      setAgentList(config.agents);
-      saveAgentsConfig(config.agents);
-      setShowLoadConfigModal(false);
-      alert('配置加载成功！');
-    } else {
-      alert('配置加载失败');
-    }
-  };
-
-  // 重置为默认对峙性配置
-  const resetToDefaultConfig = () => {
-    // eslint-disable-next-line no-restricted-globals
-    if (confirm('确定要重置为默认的对峙性智能体配置吗？这将覆盖当前配置。')) {
-      // 清除localStorage中的保存配置
-      localStorage.removeItem('savedAgents');
-      // 使用默认配置
-      const defaultAgents = getDefaultAgents();
-      setAgentList(defaultAgents);
-      saveAgentsConfig(defaultAgents);
-      setConfigMode('custom');
-      alert('已重置为默认对峙性配置！');
-    }
-  };
-
-  // 应用企业模式配置
-  const applyEnterpriseConfig = () => {
-    // eslint-disable-next-line no-restricted-globals
-    if (confirm('确定要切换到企业模式吗？这将使用专业的企业组织架构智能体配置。')) {
-      const enterpriseAgents = ENTERPRISE_AGENT_CONFIG.agents.map(agent => ({
-        id: agent.id,
-        name: agent.name,
-        role: agent.role,
-        apiKey: '',
-        model: '',
-        description: agent.systemPrompt,
-        avatar: agent.avatar,
-        color: agent.color,
-        priority: agent.priority,
-        speakingOrder: agent.speakingOrder,
-        triggers: agent.triggers
-      }));
-      
-      setAgentList(enterpriseAgents);
-      saveAgentsConfig(enterpriseAgents);
-      setConfigMode('enterprise');
-      alert('已应用企业模式配置！现在您拥有一个完整的企业决策团队。');
-    }
-  };
-  
   return (
-    <div className="agent-config">
-      <h2>配置智能体</h2>
-      
-      <div className="config-mode-selector">
-        <h3>🎯 选择配置模式</h3>
-        <div className="mode-buttons">
+    <div style={{
+      maxWidth: '1000px',
+      margin: '0 auto',
+      padding: '2rem',
+      backgroundColor: 'var(--background)',
+      color: 'var(--text-color)',
+      minHeight: '100vh'
+    }}>
+      <h2 style={{
+        textAlign: 'center',
+        marginBottom: '2rem',
+        color: 'var(--primary-color)',
+        fontSize: '2rem',
+        fontWeight: 'bold'
+      }}>
+        配置智能体
+      </h2>
+
+      {/* 配置模式选择 */}
+      <div className="config-mode-selector" style={{ marginBottom: '2rem' }}>
+        <h3 style={{ marginBottom: '1rem', color: 'var(--text-color)' }}>选择配置模式</h3>
+        <div className="mode-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
           <button 
             className={`mode-button ${configMode === 'custom' ? 'active' : ''}`}
-            onClick={resetToDefaultConfig}
-          >
-            🔥 对峙性辩论模式
-            <span className="mode-description">7个具有强烈批判性思维的智能体，促进深度辩论</span>
-          </button>
-          
-          <button 
-            className={`mode-button ${configMode === 'enterprise' ? 'active' : ''}`}
-            onClick={applyEnterpriseConfig}
-          >
-            🏢 企业决策模式
-            <span className="mode-description">8个专业企业角色，模拟真实企业决策流程</span>
-          </button>
-        </div>
-      </div>
-
-      {configMode === 'custom' && (
-        <div className="config-info">
-          <div className="info-box">
-            <h3>🔥 对峙性智能体配置说明</h3>
-            <p>本系统预设了7个具有强烈对峙性和批判性思维的智能体角色，旨在产生深度的思辨讨论：</p>
-            <ul>
-              <li><strong>严厉主持人</strong>：主动挑起争议，推动激烈辩论</li>
-              <li><strong>激进创新者</strong>：挑战传统，提出颠覆性观点</li>
-              <li><strong>尖锐批评家</strong>：无情批评，寻找观点漏洞</li>
-              <li><strong>冷酷分析师</strong>：用数据和逻辑拆解错误观点</li>
-              <li><strong>严格整合者</strong>：深挖冲突，拒绝表面妥协</li>
-              <li><strong>务实质疑者</strong>：质疑不切实际的想法</li>
-              <li><strong>权威专家</strong>：用专业知识无情批判</li>
-            </ul>
-            <p><strong>注意</strong>：这些角色被设计为产生建设性冲突，促进深度思考，而非恶意攻击。</p>
-          </div>
-        </div>
-      )}
-
-      {configMode === 'enterprise' && (
-        <div className="config-info">
-          <div className="info-box enterprise-mode">
-            <h3>🏢 企业智能体群配置说明</h3>
-            <p>本系统模拟完整的企业组织架构，包含8个专业角色，按照真实企业决策流程进行结构化讨论：</p>
-            <div className="enterprise-roles">
-              <div className="role-category">
-                <h4>👔 高层决策</h4>
-                <ul>
-                  <li><strong>CEO/总经理</strong>：战略决策者，拥有最终决策权</li>
-                </ul>
-              </div>
-              <div className="role-category">
-                <h4>🎯 核心业务</h4>
-                <ul>
-                  <li><strong>产品经理</strong>：用户需求分析，产品策略规划</li>
-                  <li><strong>技术总监</strong>：技术方案设计，可行性评估</li>
-                  <li><strong>市场总监</strong>：市场分析，竞争策略制定</li>
-                </ul>
-              </div>
-              <div className="role-category">
-                <h4>💼 支持职能</h4>
-                <ul>
-                  <li><strong>财务总监</strong>：成本控制，投资回报分析</li>
-                  <li><strong>人力资源总监</strong>：团队建设，人力配置</li>
-                  <li><strong>运营总监</strong>：执行计划，流程优化</li>
-                  <li><strong>质量保证经理</strong>：风险评估，质量控制</li>
-                </ul>
-              </div>
-            </div>
-            <p><strong>特点</strong>：结构化决策流程，8轮讨论涵盖问题分析→方案设计→执行规划→决策总结四个阶段。</p>
-          </div>
-        </div>
-      )}
-      
-      <div className="mcp-services">
-        <h3>选择MCP服务</h3>
-        <select 
-          value={selectedMcpService} 
-          onChange={handleMcpServiceChange}
-        >
-          <option value="">请选择MCP服务</option>
-          {mcpServices.map(service => (
-            <option key={service.id} value={service.id}>
-              {service.name} - {service.description}
-            </option>
-          ))}
-        </select>
-      </div>
-      
-      <div className="account-info">
-        <h3>账号级别</h3>
-        <div className="account-tier">
-          <select 
-            value={accountTier}
-            onChange={(e) => {
-              setAccountTier(e.target.value);
-              localStorage.setItem('accountTier', e.target.value);
+            onClick={() => handleModeChange('custom')}
+            style={{
+              backgroundColor: configMode === 'custom' ? '#7c3aed' : 'var(--card-bg)',
+              color: configMode === 'custom' ? 'white' : 'var(--text-color)',
+              border: '2px solid #7c3aed',
+              borderRadius: '8px',
+              padding: '1rem',
+              cursor: 'pointer',
+              flex: 1,
+              textAlign: 'center',
+              fontWeight: 'bold'
             }}
           >
-            <option value="free">免费账户</option>
-            <option value="standard">标准账户</option>
-            <option value="premium">高级账户</option>
-            <option value="enterprise">企业账户</option>
-          </select>
-          {accountTier !== 'enterprise' && (
-            <p className="account-note">
-              您当前是{accountTier === 'free' ? '免费' : accountTier === 'standard' ? '标准' : '高级'}账户，
-              无法使用Claude 4模型。需要升级到企业账户才能使用该模型。
+            🧠 智慧协调模式
+          </button>
+          <button 
+            className={`mode-button ${configMode === 'enterprise' ? 'active' : ''}`}
+            onClick={() => handleModeChange('enterprise')}
+            style={{
+              backgroundColor: configMode === 'enterprise' ? '#7c3aed' : 'var(--card-bg)',
+              color: configMode === 'enterprise' ? 'white' : 'var(--text-color)',
+              border: '2px solid #7c3aed',
+              borderRadius: '8px',
+              padding: '1rem',
+              cursor: 'pointer',
+              flex: 1,
+              textAlign: 'center',
+              fontWeight: 'bold'
+            }}
+          >
+            🏢 企业决策模式
+          </button>
+        </div>
+        <div className="mode-description" style={{
+          padding: '1rem',
+          backgroundColor: 'rgba(124, 58, 237, 0.1)',
+          borderRadius: '8px',
+          marginBottom: '1rem'
+        }}>
+          {configMode === 'custom' ? (
+            <p style={{ margin: 0, color: 'var(--text-color)' }}>
+              7个智慧协调的智能体角色，通过建设性博弈与协调，实现深度思维融合
+            </p>
+          ) : (
+            <p style={{ margin: 0, color: 'var(--text-color)' }}>
+              8个专业企业角色，模拟真实企业高管团队的决策流程和讨论
             </p>
           )}
         </div>
       </div>
-      
-      {agentList.map((agent, index) => (
-        <div key={agent.id} className={`agent-item ${configMode === 'enterprise' ? 'enterprise-agent' : ''}`} 
-             style={configMode === 'enterprise' && agent.color ? { borderLeftColor: agent.color } : {}}>
-          <h3>
-            {configMode === 'enterprise' && agent.avatar && (
-              <span className="agent-avatar" style={{ backgroundColor: agent.color + '20' }}>
-                {agent.avatar}
-              </span>
-            )}
-            {configMode === 'enterprise' ? `${agent.name} (${agent.role})` : `智能体 ${index + 1}`}
-          </h3>
-          
-          <div className="form-group">
-            <label>名称:</label>
-            <input 
-              type="text" 
-              value={agent.name} 
-              onChange={(e) => updateAgent(index, 'name', e.target.value)}
-              placeholder="输入智能体名称"
-            />
+
+      {/* 企业模式角色展示 */}
+      {configMode === 'enterprise' && (
+        <div className="enterprise-mode" style={{ marginBottom: '2rem' }}>
+          <div className="enterprise-roles" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            {getCurrentModeRoles().map((roleName) => (
+              <div key={roleName} className="role-category" style={{
+                backgroundColor: 'var(--card-bg)',
+                padding: '1rem',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color)'
+              }}>
+                <h4 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)' }}>
+                  {roleTemplates[roleName].name} ({roleName})
+                </h4>
+                <p style={{ 
+                  margin: 0, 
+                  color: 'var(--text-color)', 
+                  fontSize: '0.9rem',
+                  lineHeight: '1.4',
+                  overflow: 'hidden',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical'
+                }}>
+                  {roleTemplates[roleName].description.split('。')[0]}...
+                </p>
+              </div>
+            ))}
           </div>
-          
-          <div className="form-group">
-            <label>角色:</label>
-            <input 
-              type="text" 
-              value={agent.role} 
-              onChange={(e) => updateAgent(index, 'role', e.target.value)}
-              placeholder="输入智能体角色"
-            />
+        </div>
+      )}
+
+      {/* 主持人配置面板 */}
+      {showModeratorConfig && (
+        <div style={{
+          border: '2px solid #7c3aed',
+          borderRadius: '12px',
+          padding: '1.5rem',
+          marginBottom: '2rem',
+          backgroundColor: 'rgba(124, 58, 237, 0.05)',
+          boxShadow: '0 4px 8px rgba(124, 58, 237, 0.1)'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: '1rem'
+          }}>
+            <h3 style={{
+              margin: 0,
+              color: '#7c3aed',
+              fontSize: '1.2rem',
+              fontWeight: 'bold'
+            }}>
+              🎭 超级主持人配置
+            </h3>
+            <button
+              onClick={() => setShowModeratorConfig(false)}
+              style={{
+                marginLeft: 'auto',
+                backgroundColor: 'transparent',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                color: '#7c3aed'
+              }}
+            >
+              ×
+            </button>
           </div>
-          
-          <div className="form-group">
-            <label>描述 (作为AI智能体的提示词):</label>
-            <textarea 
-              value={agent.description} 
-              onChange={(e) => updateAgent(index, 'description', e.target.value)}
-              placeholder="详细描述智能体的角色特点、行为风格和专业领域。这些内容将作为AI的提示词，影响智能体的回复风格和专业程度。"
-              rows={4}
-            />
-            <small className="description-hint">
-              提示：详细的描述能让AI更好地扮演特定角色，建议包含专业背景、性格特点、说话风格等信息。
-            </small>
+
+          <div style={{
+            backgroundColor: 'rgba(124, 58, 237, 0.08)',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1.5rem',
+            border: '1px solid rgba(124, 58, 237, 0.2)'
+          }}>
+            <p style={{ margin: 0, color: '#5b21b6', fontSize: '0.9rem' }}>
+              💡 <strong>超级主持人</strong>是一个AI驱动的智能引导者，它会：<br/>
+              • 实时分析讨论质量和深度<br/>
+              • 智能选择最佳引导策略<br/>
+              • 提出深度问题推动思辨<br/>
+              • 防止讨论偏离主题或流于表面
+            </p>
           </div>
-          
-          <div className="form-group">
-            <label>API密钥:</label>
-            <div className="api-key-input">
-              <input 
-                type="password" 
-                value={agent.apiKey} 
-                onChange={(e) => updateAgent(index, 'apiKey', e.target.value)}
-                placeholder="输入SiliconFlow API密钥"
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#5b21b6' }}>
+                API密钥 *
+              </label>
+              <input
+                type="password"
+                value={moderatorConfig.apiKey}
+                onChange={(e) => handleModeratorConfigChange('apiKey', e.target.value)}
+                placeholder="输入主持人使用的API密钥"
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid rgba(124, 58, 237, 0.3)',
+                  borderRadius: '4px',
+                  backgroundColor: 'white'
+                }}
               />
-              {agent.apiKey && (
-                <button 
-                  type="button"
-                  className="test-api-button"
-                  onClick={async () => {
-                    try {
-                      const { getAccountInfo } = await import('../services/api');
-                      const result = await getAccountInfo(agent.apiKey);
-                      alert('API密钥验证成功！');
-                      console.log('账号信息:', result);
-                    } catch (error) {
-                      console.error('API密钥验证失败:', error);
-                      alert('API密钥验证失败: ' + error.message);
-                    }
-                  }}
-                >
-                  测试
-                </button>
-              )}
             </div>
-            <small className="api-key-hint">
-              获取API密钥：访问 <a href="https://cloud.siliconflow.cn" target="_blank" rel="noopener noreferrer">SiliconFlow控制台</a>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#5b21b6' }}>
+                AI模型
+              </label>
+              <select
+                value={moderatorConfig.model}
+                onChange={(e) => handleModeratorConfigChange('model', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid rgba(124, 58, 237, 0.3)',
+                  borderRadius: '4px',
+                  backgroundColor: 'white'
+                }}
+              >
+                <option value="">选择模型</option>
+                {/* 推理模型 - 主持人专用推荐 */}
+                <option value="deepseek-ai/DeepSeek-R1">🧠 DeepSeek-R1 (推理模型)</option>
+                <option value="Pro/deepseek-ai/DeepSeek-R1">🧠 DeepSeek-R1 Pro (推理模型)</option>
+                
+                {/* 顶级语言模型 */}
+                <option value="deepseek-ai/DeepSeek-V3">🚀 DeepSeek-V3 (强化版)</option>
+                <option value="Pro/deepseek-ai/DeepSeek-V3">🚀 DeepSeek-V3 Pro (强化版)</option>
+                <option value="Qwen/QwQ-32B">🤔 QwQ-32B (思考模型)</option>
+                <option value="Qwen/Qwen2.5-72B-Instruct">💎 Qwen2.5-72B (大参数)</option>
+                
+                {/* 高性价比选择 */}
+                <option value="Qwen/Qwen2.5-32B-Instruct">⚡ Qwen2.5-32B</option>
+                <option value="deepseek-ai/DeepSeek-V2.5">🔥 DeepSeek-V2.5</option>
+                
+                {/* 免费模型 */}
+                <option value="Qwen/Qwen2.5-7B-Instruct">🆓 Qwen2.5-7B (免费)</option>
+                <option value="THUDM/glm-4-9b-chat">🆓 GLM-4-9B (免费)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <input
+              type="checkbox"
+              id="enableModerator"
+              checked={moderatorConfig.enabled}
+              onChange={(e) => handleModeratorConfigChange('enabled', e.target.checked)}
+              style={{ transform: 'scale(1.2)' }}
+            />
+            <label htmlFor="enableModerator" style={{ fontWeight: 'bold', color: '#5b21b6' }}>
+              启用超级主持人功能
+            </label>
+          </div>
+
+          <div style={{ marginTop: '1rem', padding: '0.5rem', backgroundColor: 'rgba(124, 58, 237, 0.3)', borderRadius: '4px' }}>
+            <small style={{ color: '#5b21b6' }}>
+              💡 提示：主持人会在讨论进行3轮后开始介入，智能分析讨论状态并提供引导。
+              {!moderatorConfig.apiKey && <strong> 请先配置API密钥！</strong>}
             </small>
           </div>
-          
-          <ModelSelector 
-            apiKey={agent.apiKey}
-            selectedModel={agent.model}
-            onModelSelect={(model) => updateAgent(index, 'model', model)}
-          />
-          
-          <button 
-            onClick={() => removeAgent(index)}
-            className="remove-button"
-          >
-            删除此智能体
-          </button>
+        </div>
+      )}
+
+      {/* 智能体列表 */}
+      {agentList.map((agent, index) => (
+        <div key={agent.id} style={{
+          backgroundColor: 'var(--card-bg)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          padding: '1.5rem',
+          marginBottom: '1rem'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1rem'
+          }}>
+            <h3 style={{ margin: 0, fontWeight: 'bold' }}>智能体 #{index + 1}</h3>
+            {agentList.length > 1 && (
+              <button
+                onClick={() => removeAgent(index)}
+                style={{
+                  backgroundColor: '#f43f5e',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                删除
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                名称
+              </label>
+              <input
+                type="text"
+                value={agent.name}
+                onChange={(e) => updateAgent(index, 'name', e.target.value)}
+                placeholder="智能体名称"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '4px',
+                  backgroundColor: 'var(--input-bg)',
+                  color: 'var(--text-color)'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                角色
+              </label>
+              <select
+                value={agent.role}
+                onChange={(e) => updateAgent(index, 'role', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '4px',
+                  backgroundColor: 'var(--input-bg)',
+                  color: 'var(--text-color)'
+                }}
+              >
+                <option value="">选择角色</option>
+                {getCurrentModeRoles().map((role) => (
+                  <option key={role} value={role}>{role}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                API密钥
+              </label>
+              <input
+                type="password"
+                value={agent.apiKey}
+                onChange={(e) => updateAgent(index, 'apiKey', e.target.value)}
+                placeholder="输入API密钥"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '4px',
+                  backgroundColor: 'var(--input-bg)',
+                  color: 'var(--text-color)'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                大模型选择
+              </label>
+              <select
+                value={agent.model || ''}
+                onChange={(e) => updateAgent(index, 'model', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '4px',
+                  backgroundColor: 'var(--input-bg)',
+                  color: 'var(--text-color)'
+                }}
+              >
+                <option value="">选择模型</option>
+                {/* 推理模型 - 最新最强 */}
+                <option value="deepseek-ai/DeepSeek-R1">🧠 DeepSeek-R1 (推理模型)</option>
+                <option value="Pro/deepseek-ai/DeepSeek-R1">🧠 DeepSeek-R1 Pro (推理模型)</option>
+                
+                {/* 顶级语言模型 - 最常用 */}
+                <option value="deepseek-ai/DeepSeek-V3">🚀 DeepSeek-V3 (强化版)</option>
+                <option value="Pro/deepseek-ai/DeepSeek-V3">🚀 DeepSeek-V3 Pro (强化版)</option>
+                <option value="Qwen/QwQ-32B">🤔 QwQ-32B (思考模型)</option>
+                <option value="Qwen/Qwen3-32B">✨ Qwen3-32B (最新版)</option>
+                <option value="Qwen/Qwen2.5-72B-Instruct">💎 Qwen2.5-72B (大参数)</option>
+                
+                {/* 高性价比选择 */}
+                <option value="Qwen/Qwen2.5-32B-Instruct">⚡ Qwen2.5-32B</option>
+                <option value="deepseek-ai/DeepSeek-V2.5">🔥 DeepSeek-V2.5</option>
+                <option value="Qwen/Qwen2.5-14B-Instruct">💫 Qwen2.5-14B</option>
+                <option value="THUDM/GLM-4-32B-0414">🌟 GLM-4-32B</option>
+                
+                {/* 免费模型 */}
+                <option value="Qwen/Qwen2.5-7B-Instruct">🆓 Qwen2.5-7B (免费)</option>
+                <option value="Qwen/Qwen3-8B">🆓 Qwen3-8B (免费)</option>
+                <option value="THUDM/glm-4-9b-chat">🆓 GLM-4-9B (免费)</option>
+                <option value="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B">🆓 DeepSeek-R1-Distill-7B (免费)</option>
+                
+                {/* 专业模型 */}
+                <option value="Qwen/Qwen2.5-Coder-32B-Instruct">👨‍💻 Qwen2.5-Coder-32B (编程)</option>
+                <option value="Qwen/Qwen2.5-VL-32B-Instruct">👁️ Qwen2.5-VL-32B (视觉)</option>
+                <option value="deepseek-ai/deepseek-vl2">👁️ DeepSeek-VL2 (视觉)</option>
+                <option value="Qwen/QVQ-72B-Preview">🎥 QVQ-72B (视频理解)</option>
+                
+                {/* Pro版本 - 高质量服务 */}
+                <option value="Pro/Qwen/Qwen2.5-7B-Instruct">⭐ Qwen2.5-7B Pro</option>
+                <option value="Pro/Qwen/Qwen2.5-VL-7B-Instruct">⭐ Qwen2.5-VL-7B Pro</option>
+                <option value="Pro/THUDM/glm-4-9b-chat">⭐ GLM-4-9B Pro</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              角色描述
+            </label>
+            <textarea
+              value={agent.description}
+              onChange={(e) => updateAgent(index, 'description', e.target.value)}
+              placeholder="描述智能体的角色特点和行为方式"
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid var(--border-color)',
+                borderRadius: '4px',
+                backgroundColor: 'var(--input-bg)',
+                color: 'var(--text-color)',
+                resize: 'vertical'
+              }}
+            />
+          </div>
         </div>
       ))}
-      
-      <div className="button-group">
-        <button onClick={addAgent} className="add-button">
+
+      {/* 操作按钮 */}
+      <div style={{
+        display: 'flex',
+        gap: '1rem',
+        marginTop: '2rem',
+        flexWrap: 'wrap'
+      }}>
+        <button
+          onClick={addAgent}
+          style={{
+            backgroundColor: 'var(--secondary-color)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '0.75rem 1.5rem',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
           添加智能体
         </button>
-        
-        <button 
-          onClick={() => setShowSaveConfigModal(true)}
-          className="save-config-button"
-        >
-          保存配置
-        </button>
-        
-        <button 
-          onClick={() => setShowLoadConfigModal(true)}
-          className="load-config-button"
-        >
-          加载配置
-        </button>
-        
-        <button 
-          onClick={() => {
-            // 检查是否至少有一个智能体配置了名称和角色
-            const isValid = agentList.some(agent => agent.name && agent.role);
-            if (isValid) {
-              // 将配置好的智能体数据传递给父组件
-              onAgentsConfigured(agentList);
-            } else {
-              alert('请至少为一个智能体配置名称和角色');
-            }
+
+        <button
+          onClick={resetToDefault}
+          style={{
+            backgroundColor: '#f43f5e',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '0.75rem 1.5rem',
+            cursor: 'pointer',
+            fontWeight: 'bold'
           }}
-          className="start-button"
         >
-          开始聊天
+          重置为默认
+        </button>
+
+        <button
+          onClick={() => setShowModeratorConfig(!showModeratorConfig)}
+          style={{
+            backgroundColor: showModeratorConfig ? '#9333ea' : '#7c3aed',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '0.75rem 1.5rem',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transform: showModeratorConfig ? 'scale(0.98)' : 'scale(1)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          🎭 {showModeratorConfig ? '关闭主持人配置' : '配置主持人'}
+        </button>
+
+        <button
+          onClick={saveConfiguration}
+          style={{
+            backgroundColor: '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '0.75rem 1.5rem',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={(e) => {
+            e.target.style.backgroundColor = '#059669';
+            e.target.style.transform = 'scale(1.02)';
+          }}
+          onMouseOut={(e) => {
+            e.target.style.backgroundColor = '#10b981';
+            e.target.style.transform = 'scale(1)';
+          }}
+        >
+          💾 保存配置
+        </button>
+
+        <button
+          onClick={() => setShowLoadConfigModal(true)}
+          style={{
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '0.75rem 1.5rem',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={(e) => {
+            e.target.style.backgroundColor = '#2563eb';
+            e.target.style.transform = 'scale(1.02)';
+          }}
+          onMouseOut={(e) => {
+            e.target.style.backgroundColor = '#3b82f6';
+            e.target.style.transform = 'scale(1)';
+          }}
+        >
+          📂 加载配置
+        </button>
+
+        <button
+          onClick={startChat}
+          style={{
+            backgroundColor: 'var(--primary-color)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '0.75rem 1.5rem',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            marginLeft: 'auto',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={(e) => {
+            e.target.style.transform = 'scale(1.02)';
+            e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+          }}
+          onMouseOut={(e) => {
+            e.target.style.transform = 'scale(1)';
+            e.target.style.boxShadow = 'none';
+          }}
+        >
+          🚀 开始讨论
         </button>
       </div>
 
-      {/* 保存配置模态框 */}
-      {showSaveConfigModal && (
-        <div className="modal-overlay" onClick={() => setShowSaveConfigModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h3>保存智能体配置</h3>
-            <div className="form-group">
-              <label>配置名称:</label>
-              <input 
-                type="text"
-                value={configName}
-                onChange={(e) => setConfigName(e.target.value)}
-                placeholder="输入配置名称，例如：创意讨论团队"
-                autoFocus
-              />
-            </div>
-            <div className="modal-buttons">
-              <button onClick={handleSaveConfig} className="save-button">保存</button>
-              <button onClick={() => setShowSaveConfigModal(false)} className="cancel-button">取消</button>
-            </div>
-          </div>
-        </div>
-      )}
+             {/* 保存配置弹窗 */}
+       {showSaveConfigModal && (
+         <div style={{
+           position: 'fixed',
+           top: 0,
+           left: 0,
+           right: 0,
+           bottom: 0,
+           backgroundColor: 'rgba(0, 0, 0, 0.5)',
+           display: 'flex',
+           justifyContent: 'center',
+           alignItems: 'center',
+           zIndex: 1000
+         }}>
+           <div style={{
+             backgroundColor: 'var(--background)',
+             color: 'var(--text-color)',
+             padding: '2rem',
+             borderRadius: '8px',
+             maxWidth: '400px',
+             width: '90%',
+             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+           }}>
+             <h2 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>💾 保存配置</h2>
+             <input
+               type="text"
+               value={configName}
+               onChange={(e) => setConfigName(e.target.value)}
+               placeholder="输入配置名称"
+               style={{
+                 width: '100%',
+                 padding: '0.75rem',
+                 marginBottom: '1rem',
+                 border: '1px solid var(--border-color)',
+                 borderRadius: '4px',
+                 backgroundColor: 'var(--input-bg)',
+                 color: 'var(--text-color)',
+                 fontSize: '1rem'
+               }}
+             />
+             <textarea
+               value={configDescription}
+               onChange={(e) => setConfigDescription(e.target.value)}
+               placeholder="配置描述（可选）"
+               rows="3"
+               style={{
+                 width: '100%',
+                 padding: '0.75rem',
+                 marginBottom: '1rem',
+                 border: '1px solid var(--border-color)',
+                 borderRadius: '4px',
+                 backgroundColor: 'var(--input-bg)',
+                 color: 'var(--text-color)',
+                 fontSize: '1rem',
+                 resize: 'vertical'
+               }}
+             />
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+               <button
+                 onClick={confirmSaveConfig}
+                 style={{
+                   backgroundColor: '#10b981',
+                   color: 'white',
+                   border: 'none',
+                   borderRadius: '4px',
+                   padding: '0.75rem 1.5rem',
+                   cursor: 'pointer',
+                   fontWeight: 'bold',
+                   flex: 1,
+                   transition: 'all 0.2s ease'
+                 }}
+                 onMouseOver={(e) => e.target.style.backgroundColor = '#059669'}
+                 onMouseOut={(e) => e.target.style.backgroundColor = '#10b981'}
+               >
+                 💾 保存
+               </button>
+               <button
+                 onClick={() => {
+                   setShowSaveConfigModal(false);
+                   setConfigName('');
+                   setConfigDescription('');
+                 }}
+                 style={{
+                   backgroundColor: '#6b7280',
+                   color: 'white',
+                   border: 'none',
+                   borderRadius: '4px',
+                   padding: '0.75rem 1.5rem',
+                   cursor: 'pointer',
+                   fontWeight: 'bold',
+                   flex: 1,
+                   transition: 'all 0.2s ease'
+                 }}
+                 onMouseOver={(e) => e.target.style.backgroundColor = '#4b5563'}
+                 onMouseOut={(e) => e.target.style.backgroundColor = '#6b7280'}
+               >
+                 取消
+               </button>
+             </div>
+           </div>
+         </div>
+       )}
 
-      {/* 加载配置模态框 */}
-      {showLoadConfigModal && (
-        <div className="modal-overlay" onClick={() => setShowLoadConfigModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h3>加载智能体配置</h3>
-            {savedConfigs.length === 0 ? (
-              <p>暂无已保存的配置</p>
-            ) : (
-              <div className="config-list">
-                {savedConfigs.map(config => (
-                  <div key={config.id} className="config-item">
-                    <div className="config-info">
-                      <h4>{config.name}</h4>
-                      <p>{config.description}</p>
-                      <small>创建时间: {new Date(config.createdAt).toLocaleString()}</small>
-                    </div>
-                    <button 
-                      onClick={() => handleLoadConfig(config.id)}
-                      className="load-button"
-                    >
-                      加载
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="modal-buttons">
-              <button onClick={() => setShowLoadConfigModal(false)} className="cancel-button">关闭</button>
-            </div>
-          </div>
-        </div>
-      )}
+                 {/* 加载配置弹窗 */}
+           {showLoadConfigModal && (
+             <div style={{
+               position: 'fixed',
+               top: 0,
+               left: 0,
+               right: 0,
+               bottom: 0,
+               backgroundColor: 'rgba(0, 0, 0, 0.5)',
+               display: 'flex',
+               justifyContent: 'center',
+               alignItems: 'center',
+               zIndex: 1000
+             }}>
+               <div style={{
+                 backgroundColor: 'var(--background)',
+                 color: 'var(--text-color)',
+                 padding: '2rem',
+                 borderRadius: '8px',
+                 maxWidth: '500px',
+                 width: '90%',
+                 maxHeight: '80vh',
+                 overflowY: 'auto'
+               }}>
+                 <h2 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>加载保存的配置</h2>
+                 
+                 {savedConfigs.length === 0 ? (
+                   <p style={{ marginBottom: '1rem' }}>暂无保存的配置</p>
+                 ) : (
+                   <div style={{ marginBottom: '1rem' }}>
+                     {savedConfigs.map((config) => (
+                       <div 
+                         key={config.id} 
+                         style={{
+                           border: '1px solid var(--border-color)',
+                           borderRadius: '8px',
+                           padding: '1rem',
+                           marginBottom: '1rem',
+                           backgroundColor: 'var(--card-bg)',
+                           cursor: 'pointer'
+                         }}
+                         onClick={() => loadSavedConfig(config.id)}
+                       >
+                         <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--primary-color)' }}>
+                           {config.name}
+                         </h3>
+                         {config.description && (
+                           <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                             {config.description}
+                           </p>
+                         )}
+                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                           <span>智能体数量: {config.agents?.length || 0} | </span>
+                           <span>创建时间: {new Date(config.createdAt).toLocaleDateString()}</span>
+                         </div>
+                         <div style={{
+                           marginTop: '0.5rem',
+                           padding: '0.5rem',
+                           backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                           borderRadius: '4px',
+                           fontSize: '0.8rem'
+                         }}>
+                           点击加载此配置
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+                 
+                 <div style={{ display: 'flex', justifyContent: 'center' }}>
+                   <button
+                     onClick={() => setShowLoadConfigModal(false)}
+                     style={{
+                       backgroundColor: '#f43f5e',
+                       color: 'white',
+                       border: 'none',
+                       borderRadius: '4px',
+                       padding: '0.75rem 1.5rem',
+                       cursor: 'pointer',
+                       fontWeight: 'bold'
+                     }}
+                   >
+                     关闭
+                   </button>
+                 </div>
+               </div>
+             </div>
+           )}
     </div>
   );
 };

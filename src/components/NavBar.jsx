@@ -13,7 +13,7 @@ const NavBar = ({ toggleTheme, isDarkMode }) => {
   return (
     <nav className="navbar">
       <div className="logo">
-        <Link to="/">AI多智能体聊天</Link>
+        <Link to="/">企业多智能大脑</Link>
       </div>
       
       <div className="nav-links">
@@ -24,7 +24,7 @@ const NavBar = ({ toggleTheme, isDarkMode }) => {
           配置智能体
         </NavLink>
         <NavLink to="/chat" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-          聊天室
+          讨论大厅
         </NavLink>
         <NavLink to="/account" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
           账号设置

@@ -483,3 +483,167 @@ export const exportAgentConfigAsJson = (configId) => {
     return false;
   }
 };
+
+/**
+ * 智能体配置管理
+ */
+export const agentConfigStorage = {
+  // 保存智能体配置
+  saveAgentConfig: (agentId, config) => {
+    try {
+      const key = `agent_config_${agentId}`;
+      localStorage.setItem(key, JSON.stringify({
+        ...config,
+        savedAt: new Date().toISOString()
+      }));
+      return true;
+    } catch (error) {
+      console.error('保存智能体配置失败:', error);
+      return false;
+    }
+  },
+
+  // 获取智能体配置
+  getAgentConfig: (agentId) => {
+    try {
+      const key = `agent_config_${agentId}`;
+      const config = localStorage.getItem(key);
+      return config ? JSON.parse(config) : null;
+    } catch (error) {
+      console.error('获取智能体配置失败:', error);
+      return null;
+    }
+  },
+
+  // 获取所有保存的智能体配置
+  getAllAgentConfigs: () => {
+    try {
+      const configs = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('agent_config_')) {
+          const agentId = key.replace('agent_config_', '');
+          const config = localStorage.getItem(key);
+          if (config) {
+            configs[agentId] = JSON.parse(config);
+          }
+        }
+      }
+      return configs;
+    } catch (error) {
+      console.error('获取所有智能体配置失败:', error);
+      return {};
+    }
+  },
+
+  // 删除智能体配置
+  deleteAgentConfig: (agentId) => {
+    try {
+      const key = `agent_config_${agentId}`;
+      localStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      console.error('删除智能体配置失败:', error);
+      return false;
+    }
+  }
+};
+
+/**
+ * 主持人配置管理
+ */
+export const moderatorConfigStorage = {
+  // 保存主持人配置
+  saveModeratorConfig: (config) => {
+    try {
+      localStorage.setItem('moderator_config', JSON.stringify({
+        ...config,
+        savedAt: new Date().toISOString()
+      }));
+      return true;
+    } catch (error) {
+      console.error('保存主持人配置失败:', error);
+      return false;
+    }
+  },
+
+  // 获取主持人配置
+  getModeratorConfig: () => {
+    try {
+      const config = localStorage.getItem('moderator_config');
+      return config ? JSON.parse(config) : {
+        apiKey: '',
+        model: 'Qwen/Qwen2.5-7B-Instruct',
+        personality: 'professional',
+        intensity: 'moderate',
+        expertise: '',
+        enabled: false
+      };
+    } catch (error) {
+      console.error('获取主持人配置失败:', error);
+      return {
+        apiKey: '',
+        model: 'Qwen/Qwen2.5-7B-Instruct',
+        personality: 'professional',
+        intensity: 'moderate',
+        expertise: '',
+        enabled: false
+      };
+    }
+  },
+
+  // 清除主持人配置
+  clearModeratorConfig: () => {
+    try {
+      localStorage.removeItem('moderator_config');
+      return true;
+    } catch (error) {
+      console.error('清除主持人配置失败:', error);
+      return false;
+    }
+  }
+};
+
+/**
+ * 讨论设置管理
+ */
+export const discussionSettingsStorage = {
+  // 保存讨论设置
+  saveDiscussionSettings: (settings) => {
+    try {
+      localStorage.setItem('discussion_settings', JSON.stringify({
+        ...settings,
+        savedAt: new Date().toISOString()
+      }));
+      return true;
+    } catch (error) {
+      console.error('保存讨论设置失败:', error);
+      return false;
+    }
+  },
+
+  // 获取讨论设置
+  getDiscussionSettings: () => {
+    try {
+      const settings = localStorage.getItem('discussion_settings');
+      return settings ? JSON.parse(settings) : {
+        mode: 'sequential', // sequential: 轮流发言, round: 轮次发言
+        enableModerator: false,
+        maxMessageLength: 300,
+        avoidRepetition: true,
+        requireEvidence: false,
+        encourageDebate: true
+      };
+    } catch (error) {
+      console.error('获取讨论设置失败:', error);
+      return {
+        mode: 'sequential',
+        enableModerator: false,
+        maxMessageLength: 300,
+        avoidRepetition: true,
+        requireEvidence: false,
+        encourageDebate: true
+      };
+    }
+  }
+};
