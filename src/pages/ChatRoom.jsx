@@ -468,7 +468,8 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
       const msgAgent = getAgentById(msg.agentId);
       return {
         agentId: msg.agentId,
-        agentName: msgAgent.name,
+        agentName: msgAgent?.name || '系统',
+        role: msgAgent?.role || '系统',
         text: msg.text
       };
     });

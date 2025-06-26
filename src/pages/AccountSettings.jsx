@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAccountInfo } from '../services/api';
 import { getAgentConfigList, deleteAgentConfig, saveAgentConfig } from '../services/localStorage';
+import debateGameConfig from '../config/debateGameConfig';
 import '../styles/AccountSettings.css';
 
 /**
@@ -34,8 +35,9 @@ const AccountSettings = () => {
       try {
         const configs = getAgentConfigList();
         
-        // 检查是否存在默认典型配置
+        // 检查是否存在默认典型配置和辩论博弈策略配置
         const hasDefaultConfig = configs.some(config => config.name === '典型配置');
+        const hasDebateConfig = configs.some(config => config.name === '辩论博弈策略');
         
         // 如果没有默认配置，创建一个
         if (!hasDefaultConfig) {
@@ -106,13 +108,32 @@ const AccountSettings = () => {
           const configId = saveAgentConfig(defaultConfig);
           if (configId) {
             console.log('默认典型配置已创建');
-            // 重新获取配置列表
-            const updatedConfigs = getAgentConfigList();
-            setAgentConfigs(updatedConfigs);
           }
-        } else {
-          setAgentConfigs(configs);
         }
+
+        // 如果没有辩论博弈策略配置，创建一个
+        if (!hasDebateConfig) {
+          const debateConfig = {
+            name: debateGameConfig.name,
+            description: debateGameConfig.description,
+            agents: debateGameConfig.agents.map(agent => ({
+              ...agent,
+              apiKey: '' // 用户需要自己填入API密钥
+            })),
+            category: debateGameConfig.category,
+            metadata: debateGameConfig.metadata
+          };
+          
+          // 保存辩论博弈配置
+          const debateConfigId = saveAgentConfig(debateConfig);
+          if (debateConfigId) {
+            console.log('辩论博弈策略配置已创建');
+          }
+        }
+
+        // 重新获取配置列表
+        const finalConfigs = getAgentConfigList();
+        setAgentConfigs(finalConfigs);
       } catch (error) {
         console.error('加载智能体配置失败:', error);
       } finally {

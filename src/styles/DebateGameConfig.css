@@ -1,0 +1,259 @@
+/* 辩论博弈策略配置样式 */
+
+.debate-game-modal {
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.strategy-intro {
+  margin-bottom: var(--space-xl);
+}
+
+.intro-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-md);
+  backdrop-filter: var(--glass-backdrop);
+}
+
+.intro-card h3 {
+  color: var(--primary);
+  margin-bottom: var(--space-sm);
+  font-weight: 600;
+}
+
+/* 讨论流程样式 */
+.discussion-flow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.flow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: rgba(99, 102, 241, 0.05);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--primary);
+}
+
+.step-number {
+  background: var(--primary-gradient);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.step-content h4 {
+  margin: 0 0 var(--space-xs) 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.step-content p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* 智能体卡片样式 */
+.agents-preview {
+  margin-bottom: var(--space-xl);
+}
+
+.agents-preview h3 {
+  color: var(--primary);
+  margin-bottom: var(--space-md);
+  font-weight: 600;
+}
+
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-md);
+}
+
+.agent-card {
+  background: var(--glass-bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  transition: all 0.3s ease;
+  backdrop-filter: var(--glass-backdrop);
+}
+
+.agent-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.agent-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.agent-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.agent-info h4 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.agent-role {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.agent-description {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 建议话题样式 */
+.suggested-topics {
+  margin-bottom: var(--space-xl);
+}
+
+.suggested-topics h3 {
+  color: var(--primary);
+  margin-bottom: var(--space-sm);
+  font-weight: 600;
+}
+
+.topics-intro {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
+  font-size: 0.9rem;
+}
+
+.topics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-sm);
+}
+
+.topic-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.topic-card:hover {
+  border-color: var(--primary);
+  background: var(--surface-hover);
+  transform: translateY(-1px);
+}
+
+.topic-card.selected {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* 使用建议样式 */
+.usage-tips h3 {
+  color: var(--primary);
+  margin-bottom: var(--space-md);
+  font-weight: 600;
+}
+
+.tips-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.tip-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--success);
+}
+
+.tip-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.tip-item span:last-child {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .debate-game-modal {
+    max-width: 95vw;
+    margin: var(--space-sm);
+  }
+  
+  .discussion-flow {
+    grid-template-columns: 1fr;
+  }
+  
+  .agents-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .topics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .flow-step {
+    padding: var(--space-sm);
+  }
+  
+  .agent-card {
+    padding: var(--space-sm);
+  }
+}
+
+/* 暗色模式适配 */
+.dark-mode .flow-step {
+  background: rgba(124, 58, 237, 0.1);
+}
+
+.dark-mode .topic-card.selected {
+  background: rgba(124, 58, 237, 0.2);
+} 
