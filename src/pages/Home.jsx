@@ -64,7 +64,10 @@ const Home = () => {
     <div className="home">
       <section className="hero">
         <h1>睿思企业智能大脑系统</h1>
-          <p className="subtitle">企业级AI智能体协作平台，实现深度讨论与知识创新</p>
+          <p className="subtitle">革命性AI多智能体协作平台，打造企业级智慧决策生态</p>
+          <div className="description">
+            <p>通过多个AI智能体的深度对话与碰撞，激发创新思维，挖掘问题本质。支持智慧协调、企业决策、辩论博弈三大模式，为团队决策提供全方位智能支持。让AI智能体成为您的专业顾问团，共同探索复杂问题的最优解决方案。</p>
+          </div>
         
         <div className="cta-buttons">
           <Link to="/config" className="cta-button primary">开始配置</Link>
