@@ -74,22 +74,29 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
         'text/plain',
         'text/markdown',
         'application/json',
-        'text/csv',
-        'application/pdf', // 暂时支持，但会提示
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        'text/csv'
       ];
       
-      // 如果是不支持的文件类型，给出提示
-      if (!allowedTypes.includes(file.type) && !file.name.match(/\.(txt|md|json|csv)$/i)) {
-        const supportMessage = `文件 ${file.name} 的格式可能不被完全支持。
-建议使用：
-• .txt 文本文件
+      // 检查文件扩展名
+      const fileExtension = file.name.toLowerCase().split('.').pop();
+      const allowedExtensions = ['txt', 'md', 'json', 'csv'];
+      
+      // 如果是不支持的文件类型，给出详细提示
+      if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+        const supportMessage = `文件 ${file.name} 的格式不被支持。
+
+📋 支持的格式：
+• .txt 文本文件（推荐）
 • .md Markdown文件  
 • .json JSON文件
 • .csv 表格文件
 
-是否继续上传？`;
+💡 建议：
+• Word文档请复制内容到.txt文件
+• 确保文件是UTF-8编码
+• 或直接复制文本到知识库输入框
+
+是否仍要尝试上传此文件？`;
         
         if (!window.confirm(supportMessage)) {
           return;
@@ -106,16 +113,21 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
           return;
         }
         
-        // 检查是否包含乱码字符
+        // 检查是否包含乱码字符（更严格的检测）
         // eslint-disable-next-line no-control-regex
-        const hasGarbledText = /[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(content);
+        const hasGarbledText = /[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/.test(content) ||
+                              content.includes('') ||
+                              /[^\u0020-\u007E\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\u2000-\u206f\u00a0-\u00ff\r\n\t]/.test(content);
+        
         if (hasGarbledText) {
-          const retryMessage = `文件 ${file.name} 可能包含特殊字符或编码问题。
-          
-建议：
-• 确保文件是UTF-8编码
-• 使用记事本另存为UTF-8格式
-• 或者直接复制文本内容到知识库输入框
+          const retryMessage = `⚠️ 文件 ${file.name} 检测到编码问题，可能显示为乱码。
+
+🔧 解决方案：
+1. 使用记事本打开文件 → 另存为 → 编码选择"UTF-8"
+2. 或使用专业编辑器（如VS Code）转换编码
+3. 或直接复制文本内容粘贴到知识库输入框
+
+📝 提示：继续上传可能影响显示效果
 
 是否仍要继续添加此文件？`;
           
@@ -124,40 +136,69 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
           }
         }
         
+        // 限制文件内容长度，防止过长内容影响界面
+        const maxContentLength = 5000; // 限制为5000字符
+        let processedContent = content;
+        let isTruncated = false;
+        
+        if (content.length > maxContentLength) {
+          processedContent = content.substring(0, maxContentLength);
+          isTruncated = true;
+        }
+        
         const newFile = {
           id: Date.now() + Math.random(),
           name: file.name,
-          content: content,
+          content: processedContent,
+          originalLength: content.length,
           type: file.type,
           uploadedAt: new Date().toISOString(),
           size: file.size,
-          hasIssues: hasGarbledText
+          hasIssues: hasGarbledText,
+          isTruncated: isTruncated
         };
         
         setUploadedFiles(prev => [...prev, newFile]);
         
         // 将文件内容添加到知识库
-        const fileContent = `\n\n📄 文件: ${file.name}${hasGarbledText ? ' (可能包含编码问题)' : ''}\n${content}`;
+        const truncateMsg = isTruncated ? ` (已截取前${maxContentLength}字符，原文件${content.length}字符)` : '';
+        const issueMsg = hasGarbledText ? ' (检测到编码问题)' : '';
+        
+        // 如果有编码问题，为内容添加提示和预览
+        let finalContent = processedContent;
+        if (hasGarbledText) {
+          // 只显示前200字符作为预览
+          const preview = processedContent.substring(0, 200);
+          finalContent = `⚠️ 此文件可能存在编码问题，内容显示可能不正确：\n\n${preview}${processedContent.length > 200 ? '...\n\n[内容过长，仅显示前200字符预览]' : ''}`;
+        }
+        
+        const fileContent = `\n\n📄 文件: ${file.name}${issueMsg}${truncateMsg}\n${finalContent}`;
         setKnowledgeBase(prev => prev + fileContent);
         
         // 成功上传提示
-        console.log(`✅ 文件 ${file.name} 上传成功，大小: ${(file.size / 1024).toFixed(2)}KB`);
+        console.log(`✅ 文件 ${file.name} 上传成功，大小: ${(file.size / 1024).toFixed(2)}KB${truncateMsg}`);
+        
+        if (isTruncated) {
+          alert(`📄 文件 ${file.name} 内容较长，已截取前${maxContentLength}字符。
+          
+💡 建议：如需完整内容，请将文件分段上传或直接复制到知识库输入框。`);
+        }
       };
       
       // 处理文件读取错误
       reader.onerror = (e) => {
         console.error('文件读取失败:', e);
-        alert(`文件 ${file.name} 读取失败。
+        alert(`❌ 文件 ${file.name} 读取失败
 
-可能的原因：
-• 文件已损坏
+🔍 可能的原因：
+• 文件已损坏或被占用
 • 文件格式不支持
-• 文件过大
+• 文件编码有问题
 
-建议：
-• 检查文件完整性
-• 转换为.txt格式
-• 直接复制文本内容`);
+💡 解决建议：
+1. 检查文件是否完整
+2. 转换为UTF-8编码的.txt格式
+3. 或直接复制文本内容到知识库输入框`);
       };
       
       // 指定UTF-8编码读取文本文件，解决中文乱码问题
@@ -172,9 +213,24 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
   const handleRemoveFile = (fileId) => {
     const fileToRemove = uploadedFiles.find(f => f.id === fileId);
     if (fileToRemove) {
-      // 从知识库中移除文件内容
-      const fileContent = `\n\n📄 文件: ${fileToRemove.name}\n${fileToRemove.content}`;
-      setKnowledgeBase(prev => prev.replace(fileContent, ''));
+      // 从知识库中移除文件内容，考虑各种格式的文件头
+      const fileNamePattern = `📄 文件: ${fileToRemove.name}`;
+      const currentKnowledgeBase = knowledgeBase;
+      
+      // 找到文件内容的开始位置
+      const startIndex = currentKnowledgeBase.indexOf(fileNamePattern);
+      if (startIndex !== -1) {
+        // 找到下一个文件的开始位置或内容结束
+        const nextFileIndex = currentKnowledgeBase.indexOf('\n\n📄 文件:', startIndex + 1);
+        const endIndex = nextFileIndex !== -1 ? nextFileIndex : currentKnowledgeBase.length;
+        
+        // 移除包括前面换行符的完整文件内容
+        const fullFileStart = Math.max(0, startIndex - 2); // 包括前面的\n\n
+        const newKnowledgeBase = currentKnowledgeBase.substring(0, fullFileStart) + 
+                                currentKnowledgeBase.substring(endIndex);
+        
+        setKnowledgeBase(newKnowledgeBase);
+      }
       
       // 从文件列表中移除
       setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
@@ -1237,7 +1293,8 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
                 }}>
                   💡 <strong>支持格式：</strong>.txt、.md、.json、.csv 等文本文件<br/>
                   📝 <strong>编码建议：</strong>UTF-8编码可确保中文正常显示<br/>
-                  📏 <strong>大小限制：</strong>单个文件不超过10MB
+                  📏 <strong>大小限制：</strong>单个文件不超过10MB，内容不超过5000字符<br/>
+                  ⚠️ <strong>乱码处理：</strong>系统会自动检测编码问题并提供解决建议
                 </div>
               </div>
             </div>
@@ -1268,10 +1325,12 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
                               <div style={{ fontWeight: 'bold', color: file.hasIssues ? '#856404' : '#333' }}>
                                 {file.name}
                                 {file.hasIssues && <span style={{ color: '#f57c00', marginLeft: '0.25rem' }}>⚠️</span>}
+                                {file.isTruncated && <span style={{ color: '#2196f3', marginLeft: '0.25rem' }}>✂️</span>}
                               </div>
                               <div style={{ color: '#666', fontSize: '0.7rem' }}>
                                 {sizeKB}KB • {uploadTime}
-                                {file.hasIssues && <span style={{ color: '#f57c00' }}> • 可能有编码问题</span>}
+                                {file.hasIssues && <span style={{ color: '#f57c00' }}> • 编码问题</span>}
+                                {file.isTruncated && <span style={{ color: '#2196f3' }}> • 已截取</span>}
                               </div>
                             </div>
                           </div>
@@ -1303,7 +1362,19 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
                             fontSize: '0.7rem',
                             color: '#d63031'
                           }}>
-                            💡 提示：此文件可能包含特殊字符，建议转换为UTF-8编码格式重新上传
+                            💡 编码问题：文件可能显示乱码，建议使用记事本转换为UTF-8编码后重新上传
+                          </div>
+                        )}
+                        {file.isTruncated && (
+                          <div style={{ 
+                            marginTop: '0.25rem', 
+                            padding: '0.25rem', 
+                            backgroundColor: '#e3f2fd', 
+                            borderRadius: '3px',
+                            fontSize: '0.7rem',
+                            color: '#1976d2'
+                          }}>
+                            📄 内容截取：已载入前5000字符（原文件{file.originalLength}字符），如需完整内容请分段上传
                           </div>
                         )}
                       </div>
@@ -1594,7 +1665,21 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
                       <div style={{ 
                         whiteSpace: 'pre-wrap',
                         lineHeight: '1.5',
-                        color: isSystemMessage ? '#444' : '#333'
+                        color: isSystemMessage ? '#444' : '#333',
+                        wordBreak: 'break-word',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        // 如果是知识库消息，限制最大高度并添加滚动
+                        ...(isKnowledge ? {
+                          maxHeight: '300px',
+                          overflowY: 'auto',
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '6px',
+                          padding: '0.5rem',
+                          backgroundColor: '#f9f9f9',
+                          fontFamily: 'monospace',
+                          fontSize: '0.85rem'
+                        } : {})
                       }}>
                         {message.text}
                       </div>
