@@ -317,6 +317,16 @@ export class DiscussionModerator {
     this.currentRound = 0;
     this.lastStrategy = null;
     
+    // 新增：讨论阶段管理
+    this.discussionPhase = {
+      current: 'TOPIC_ANALYSIS',     // 当前阶段
+      isTopicAnalyzed: false,        // 主题是否已分析
+      isInformationComplete: false,  // 信息是否完整
+      isReadyForDiscussion: false,   // 是否准备好开始讨论
+      pendingQuestions: [],          // 待确认的问题
+      topicBreakdown: null           // 主题拆解结果
+    };
+    
     // 主持人配置
     this.moderatorConfig = {
       apiKey: moderatorConfig.apiKey || '',
@@ -337,22 +347,188 @@ export class DiscussionModerator {
   }
 
   /**
-   * 分析讨论并生成引导
+   * 分析讨论并生成引导（新的阶段性流程）
    * @param {Array} messages - 当前讨论消息
-   * @returns {Object} 主持人的引导内容
+   * @returns {Object|null} 主持人的引导内容或null（如果不需要介入）
    */
   async moderate(messages) {
     this.discussionHistory = messages;
+    
+    // 根据当前阶段决定是否需要主持人介入
+    const shouldIntervene = this.shouldModeratorIntervene(messages);
+    
+    if (!shouldIntervene) {
+      return null; // 不需要介入
+    }
+    
     this.currentRound++;
+    
+    // 根据当前阶段选择不同的处理流程
+    switch (this.discussionPhase.current) {
+      case 'TOPIC_ANALYSIS':
+        return await this.handleTopicAnalysisPhase(messages);
+      
+      case 'INFORMATION_GATHERING':
+        return await this.handleInformationGatheringPhase(messages);
+      
+      case 'DISCUSSION_READY':
+        return await this.handleDiscussionReadyPhase(messages);
+      
+      case 'ACTIVE_DISCUSSION':
+        return await this.handleActiveDiscussionPhase(messages);
+      
+      default:
+        return await this.handleActiveDiscussionPhase(messages);
+    }
+  }
 
-    // 1. 分析当前讨论状态
+  /**
+   * 判断主持人是否需要介入
+   * @param {Array} messages - 当前讨论消息
+   * @returns {boolean} 是否需要介入
+   */
+  shouldModeratorIntervene(messages) {
+    // 如果还在主题分析或信息收集阶段，总是需要介入
+    if (this.discussionPhase.current === 'TOPIC_ANALYSIS' || 
+        this.discussionPhase.current === 'INFORMATION_GATHERING') {
+      return true;
+    }
+    
+    // 如果准备开始讨论，需要介入一次
+    if (this.discussionPhase.current === 'DISCUSSION_READY') {
+      return true;
+    }
+    
+    // 在正式讨论阶段，根据讨论质量决定是否介入
+    if (this.discussionPhase.current === 'ACTIVE_DISCUSSION') {
+      return this.shouldInterveneDuringDiscussion(messages);
+    }
+    
+    return false;
+  }
+
+  /**
+   * 在讨论过程中判断是否需要介入
+   * @param {Array} messages - 当前讨论消息
+   * @returns {boolean} 是否需要介入
+   */
+  shouldInterveneDuringDiscussion(messages) {
+    // 如果没有消息，不需要介入
+    if (!messages || messages.length === 0) return false;
+    
+    // 获取最近的智能体消息（排除主持人消息）
+    const agentMessages = messages.filter(msg => 
+      msg.type === 'message' && 
+      this.agents.some(agent => agent.id === msg.agentId)
+    );
+    
+    // 如果智能体消息少于3轮，不需要介入
+    if (agentMessages.length < 3) return false;
+    
+    // 分析讨论状态
     const state = ModeratorCore.strategy.analyzeCurrentState(messages, this.agents);
     
-    // 2. 选择最佳策略
+    // 如果有严重的质量问题，需要介入
+    const hasQualityIssues = (
+      state.depth_score < 0.2 ||      // 深度严重不足
+      state.breadth_score < 0.3 ||    // 视角过于单一
+      state.engagement_score < 0.3 || // 参与度过低
+      state.controversy_level < 0.1   // 缺乏有效争议
+    );
+    
+    // 检查是否陷入重复循环
+    const recentMessages = agentMessages.slice(-6);
+    const hasRepetition = this.detectRepetitiveDiscussion(recentMessages);
+    
+    // 检查是否停滞不前
+    const isStagnant = this.detectDiscussionStagnation(agentMessages);
+    
+    return hasQualityIssues || hasRepetition || isStagnant;
+  }
+
+  /**
+   * 处理主题分析阶段
+   * @param {Array} messages - 当前讨论消息
+   * @returns {Object} 主持人消息对象
+   */
+  async handleTopicAnalysisPhase(messages) {
+    // 生成主题深度分析
+    const topicAnalysis = await this.generateTopicAnalysis();
+    
+    // 更新阶段状态
+    this.discussionPhase.isTopicAnalyzed = true;
+    this.discussionPhase.topicBreakdown = topicAnalysis;
+    
+    // 如果有待确认的问题，进入信息收集阶段
+    if (topicAnalysis.pendingQuestions && topicAnalysis.pendingQuestions.length > 0) {
+      this.discussionPhase.current = 'INFORMATION_GATHERING';
+      this.discussionPhase.pendingQuestions = topicAnalysis.pendingQuestions;
+    } else {
+      // 没有待确认问题，直接准备讨论
+      this.discussionPhase.current = 'DISCUSSION_READY';
+      this.discussionPhase.isInformationComplete = true;
+      this.discussionPhase.isReadyForDiscussion = true;
+    }
+    
+    return this.buildTopicAnalysisMessage(topicAnalysis);
+  }
+
+  /**
+   * 处理信息收集阶段
+   * @param {Array} messages - 当前讨论消息
+   * @returns {Object} 主持人消息对象
+   */
+  async handleInformationGatheringPhase(messages) {
+    // 检查用户是否提供了补充信息
+    const userResponse = this.extractUserResponse(messages);
+    
+    if (userResponse) {
+      // 分析用户提供的信息是否充分
+      const isInformationComplete = await this.evaluateUserResponse(userResponse);
+      
+      if (isInformationComplete) {
+        // 信息充分，准备开始讨论
+        this.discussionPhase.current = 'DISCUSSION_READY';
+        this.discussionPhase.isInformationComplete = true;
+        this.discussionPhase.isReadyForDiscussion = true;
+        
+        return this.buildInformationCompleteMessage(userResponse);
+      } else {
+        // 信息仍不充分，继续询问
+        const additionalQuestions = await this.generateAdditionalQuestions(userResponse);
+        this.discussionPhase.pendingQuestions = additionalQuestions;
+        
+        return this.buildAdditionalQuestionsMessage(additionalQuestions);
+      }
+    } else {
+      // 用户还没有回应，重新提醒
+      return this.buildReminderMessage();
+    }
+  }
+
+  /**
+   * 处理讨论准备阶段
+   * @param {Array} messages - 当前讨论消息
+   * @returns {Object} 主持人消息对象
+   */
+  async handleDiscussionReadyPhase(messages) {
+    // 生成讨论启动消息
+    this.discussionPhase.current = 'ACTIVE_DISCUSSION';
+    
+    return this.buildDiscussionStartMessage();
+  }
+
+  /**
+   * 处理正式讨论阶段
+   * @param {Array} messages - 当前讨论消息
+   * @returns {Object} 主持人消息对象
+   */
+  async handleActiveDiscussionPhase(messages) {
+    // 使用原有的讨论引导逻辑
+    const state = ModeratorCore.strategy.analyzeCurrentState(messages, this.agents);
     const strategy = ModeratorCore.strategy.selectOptimalStrategy(state);
     this.lastStrategy = strategy;
     
-    // 3. 生成引导内容
     const context = {
       topic: this.topic,
       agents: this.agents,
@@ -360,10 +536,10 @@ export class DiscussionModerator {
       currentRound: this.currentRound,
       state: state,
       recentMessages: messages.slice(-5),
-      discussionRules: this.discussionRules
+      discussionRules: this.discussionRules,
+      topicBreakdown: this.discussionPhase.topicBreakdown
     };
     
-    // 4. 如果有API key，使用AI生成智能引导
     let guidance;
     if (this.moderatorConfig.apiKey) {
       guidance = await this.generateAIGuidance(strategy, context);
@@ -371,7 +547,6 @@ export class DiscussionModerator {
       guidance = ModeratorCore.guidance.generateGuidance(strategy, context);
     }
     
-    // 5. 构建完整的主持人消息
     return this.buildModeratorMessage(guidance, state, strategy);
   }
 
@@ -888,6 +1063,426 @@ ${recentContent}
     
     // 如果没有找到问题，返回前50个字符
     return response.substring(0, 50) + '...';
+  }
+
+  // ========== 新增的阶段性流程辅助方法 ==========
+
+  /**
+   * 生成主题深度分析
+   * @returns {Object} 主题分析结果
+   */
+  async generateTopicAnalysis() {
+    const analysisPrompt = this.buildTopicAnalysisPrompt();
+    
+    if (this.moderatorConfig.apiKey) {
+      try {
+        const aiResponse = await this.callAIAPI(analysisPrompt);
+        return this.parseTopicAnalysisResponse(aiResponse.content);
+      } catch (error) {
+        console.error('AI主题分析失败，使用模板分析:', error);
+        return this.generateTemplateTopicAnalysis();
+      }
+    } else {
+      return this.generateTemplateTopicAnalysis();
+    }
+  }
+
+  /**
+   * 构建主题分析的AI Prompt
+   * @returns {string} 主题分析prompt
+   */
+  buildTopicAnalysisPrompt() {
+    return `🔍 你是世界顶级的问题分析专家，具备麦肯锡咨询顾问的结构化思维、斯坦福设计思维的深度洞察。
+
+【核心任务】
+对讨论主题进行深度分析和拆解，为后续的多智能体讨论奠定基础。
+
+【讨论主题】
+"${this.topic}"
+
+【背景资料】
+${this.knowledgeBase || '无特定背景资料'}
+
+【分析维度】
+请从以下维度深度分析这个主题：
+
+1. 【问题背景】- 这个问题产生的历史背景和现实环境
+2. 【核心目的】- 讨论这个问题希望达成的主要目标
+3. 【深层目标】- 问题背后的根本性诉求和长远意义
+4. 【隐含条件】- 问题中未明确说明但影响讨论的重要条件
+5. 【关键要素】- 影响问题解决的核心要素和变量
+6. 【潜在障碍】- 可能影响讨论深度和效果的潜在问题
+
+【输出要求】
+1. 对每个维度给出具体分析（每项30-50字）
+2. 识别需要用户补充说明的关键信息点
+3. 如果发现信息不足，请列出2-3个关键问题需要用户补充
+
+格式要求：
+==== 主题分析 ====
+问题背景：[具体描述]
+核心目的：[具体描述]  
+深层目标：[具体描述]
+隐含条件：[具体描述]
+关键要素：[具体描述]
+潜在障碍：[具体描述]
+
+==== 待确认问题 ====
+[如果需要补充信息，列出具体问题，格式为：
+1. 问题1？
+2. 问题2？
+3. 问题3？
+如果信息充分，写：信息充分，可直接开始讨论]
+
+现在请开始分析：`;
+  }
+
+  /**
+   * 生成模板主题分析（备用方案）
+   * @returns {Object} 主题分析结果
+   */
+  generateTemplateTopicAnalysis() {
+    return {
+      background: `"${this.topic}"是一个值得深入探讨的重要话题`,
+      purpose: '通过多角度分析形成全面认知',
+      deepGoals: '促进理性思考和观点碰撞',
+      implicitConditions: '各参与者具备基本的讨论素养',
+      keyElements: ['观点多样性', '逻辑严谨性', '建设性辩论'],
+      potentialObstacles: ['表面化讨论', '观点单一', '缺乏深度'],
+      pendingQuestions: [
+        '这个话题有什么特定的应用场景或约束条件吗？',
+        '您希望讨论重点关注哪个层面（理论、实践、还是两者兼顾）？',
+        '有什么特殊的背景信息需要我们了解吗？'
+      ]
+    };
+  }
+
+  /**
+   * 解析主题分析的AI回复
+   * @param {string} response - AI回复
+   * @returns {Object} 解析后的分析结果
+   */
+  parseTopicAnalysisResponse(response) {
+    const analysis = {
+      background: '',
+      purpose: '',
+      deepGoals: '',
+      implicitConditions: '',
+      keyElements: [],
+      potentialObstacles: [],
+      pendingQuestions: []
+    };
+
+    // 简单的文本解析
+    const lines = response.split('\n').filter(line => line.trim());
+    let currentSection = '';
+
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      if (trimmedLine.includes('问题背景') || trimmedLine.includes('背景')) {
+        currentSection = 'background';
+        analysis.background = this.extractContent(trimmedLine);
+      } else if (trimmedLine.includes('核心目的') || trimmedLine.includes('目的')) {
+        currentSection = 'purpose';
+        analysis.purpose = this.extractContent(trimmedLine);
+      } else if (trimmedLine.includes('深层目标') || trimmedLine.includes('深层')) {
+        currentSection = 'deepGoals';
+        analysis.deepGoals = this.extractContent(trimmedLine);
+      } else if (trimmedLine.includes('隐含条件') || trimmedLine.includes('条件')) {
+        currentSection = 'implicitConditions';
+        analysis.implicitConditions = this.extractContent(trimmedLine);
+      } else if (trimmedLine.includes('待确认') || trimmedLine.includes('问题')) {
+        currentSection = 'questions';
+      } else if (trimmedLine.match(/^\d+\./)) {
+        // 数字开头的行，可能是问题列表
+        if (currentSection === 'questions') {
+          const question = trimmedLine.replace(/^\d+\./, '').trim();
+          if (question && !question.includes('信息充分')) {
+            analysis.pendingQuestions.push(question);
+          }
+        }
+      }
+    }
+
+    // 如果解析失败，使用模板分析
+    if (!analysis.background && !analysis.purpose) {
+      return this.generateTemplateTopicAnalysis();
+    }
+
+    return analysis;
+  }
+
+  /**
+   * 从文本行中提取内容
+   * @param {string} line - 文本行
+   * @returns {string} 提取的内容
+   */
+  extractContent(line) {
+    const colonIndex = line.indexOf('：');
+    if (colonIndex > -1) {
+      return line.substring(colonIndex + 1).trim();
+    }
+    const colonIndex2 = line.indexOf(':');
+    if (colonIndex2 > -1) {
+      return line.substring(colonIndex2 + 1).trim();
+    }
+    return line.trim();
+  }
+
+  /**
+   * 构建主题分析消息
+   * @param {Object} analysis - 主题分析结果
+   * @returns {Object} 主持人消息对象
+   */
+  buildTopicAnalysisMessage(analysis) {
+    let messageText = `🎭 【超级主持人 - 主题深度分析】
+
+📋 **主题拆解完成，让我为大家深度解析一下讨论主题：**
+
+🔍 **问题背景**：${analysis.background || '需要进一步明确'}
+
+🎯 **核心目的**：${analysis.purpose || '促进深度思考和观点交流'}
+
+🚀 **深层目标**：${analysis.deepGoals || '形成全面认知和实践指导'}
+
+⚙️ **隐含条件**：${analysis.implicitConditions || '理性讨论，建设性思维'}
+
+🔑 **关键要素**：${Array.isArray(analysis.keyElements) ? analysis.keyElements.join('、') : '多维度分析'}
+
+⚠️ **潜在障碍**：${Array.isArray(analysis.potentialObstacles) ? analysis.potentialObstacles.join('、') : '表面化讨论'}`;
+
+    if (analysis.pendingQuestions && analysis.pendingQuestions.length > 0) {
+      messageText += `
+
+❓ **需要确认的关键信息**：
+${analysis.pendingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
+
+⏳ **请您补充以上信息，以便我们进行更精准的讨论分析。**`;
+    } else {
+      messageText += `
+
+✅ **信息充分，准备启动讨论！**`;
+    }
+
+    return {
+      id: `moderator_analysis_${Date.now()}`,
+      agentId: 'moderator',
+      agentName: '讨论主持人',
+      role: '主持人',
+      text: messageText,
+      timestamp: new Date().toISOString(),
+      type: 'moderator',
+      phase: 'TOPIC_ANALYSIS',
+      analysis: analysis
+    };
+  }
+
+  /**
+   * 提取用户回复
+   * @param {Array} messages - 消息列表
+   * @returns {string|null} 用户回复内容
+   */
+  extractUserResponse(messages) {
+    // 查找最近的用户消息
+    const userMessages = messages.filter(msg => msg.agentId === 'user');
+    if (userMessages.length > 0) {
+      return userMessages[userMessages.length - 1].text;
+    }
+    return null;
+  }
+
+  /**
+   * 评估用户回复是否充分
+   * @param {string} userResponse - 用户回复
+   * @returns {boolean} 信息是否充分
+   */
+  async evaluateUserResponse(userResponse) {
+    // 简单的评估逻辑：如果回复包含具体信息且长度合理，认为充分
+    if (userResponse.length > 20 && 
+        (userResponse.includes('场景') || 
+         userResponse.includes('目标') || 
+         userResponse.includes('要求') ||
+         userResponse.includes('背景'))) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 生成额外问题
+   * @param {string} userResponse - 用户回复
+   * @returns {Array} 额外问题列表
+   */
+  async generateAdditionalQuestions(userResponse) {
+    return [
+      '能否提供更具体的应用场景或实例？',
+      '这个问题有什么特殊的约束条件吗？',
+      '您希望讨论达到什么具体的效果？'
+    ];
+  }
+
+  /**
+   * 构建信息完整消息
+   * @param {string} userResponse - 用户回复
+   * @returns {Object} 主持人消息对象
+   */
+  buildInformationCompleteMessage(userResponse) {
+    return {
+      id: `moderator_complete_${Date.now()}`,
+      agentId: 'moderator',
+      agentName: '讨论主持人',
+      role: '主持人',
+      text: `🎭 【超级主持人 - 信息确认完成】
+
+✅ **信息收集完成，感谢您的补充！**
+
+📝 **补充信息摘要**：${userResponse.substring(0, 100)}${userResponse.length > 100 ? '...' : ''}
+
+🚀 **现在我们有了充分的背景信息，可以开始高质量的讨论了！**
+
+💡 **各位智能体准备好了吗？让我们开始这场精彩的思维碰撞！**`,
+      timestamp: new Date().toISOString(),
+      type: 'moderator',
+      phase: 'INFORMATION_COMPLETE'
+    };
+  }
+
+  /**
+   * 构建额外问题消息
+   * @param {Array} questions - 问题列表
+   * @returns {Object} 主持人消息对象
+   */
+  buildAdditionalQuestionsMessage(questions) {
+    return {
+      id: `moderator_questions_${Date.now()}`,
+      agentId: 'moderator',
+      agentName: '讨论主持人',
+      role: '主持人',
+      text: `🎭 【超级主持人 - 补充信息请求】
+
+📝 **感谢您的回复，为了确保讨论的深度和精准性，还需要确认几个关键信息：**
+
+❓ **请补充以下信息**：
+${questions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
+
+⏳ **请您详细回答，这将帮助我们进行更有针对性的讨论。**`,
+      timestamp: new Date().toISOString(),
+      type: 'moderator',
+      phase: 'INFORMATION_GATHERING'
+    };
+  }
+
+  /**
+   * 构建提醒消息
+   * @returns {Object} 主持人消息对象
+   */
+  buildReminderMessage() {
+    return {
+      id: `moderator_reminder_${Date.now()}`,
+      agentId: 'moderator',
+      agentName: '讨论主持人',
+      role: '主持人',
+      text: `🎭 【超级主持人 - 友好提醒】
+
+⏰ **还在等待您的补充信息哦！**
+
+📋 **为了确保讨论的质量，请您回答一下之前提出的关键问题。**
+
+💡 **有了这些信息，我们就能开始一场精彩的深度讨论了！**`,
+      timestamp: new Date().toISOString(),
+      type: 'moderator',
+      phase: 'REMINDER'
+    };
+  }
+
+  /**
+   * 构建讨论开始消息
+   * @returns {Object} 主持人消息对象
+   */
+  buildDiscussionStartMessage() {
+    return {
+      id: `moderator_start_${Date.now()}`,
+      agentId: 'moderator',
+      agentName: '讨论主持人',
+      role: '主持人',
+      text: `🎭 【超级主持人 - 正式启动讨论】
+
+🎉 **主题分析完成，信息收集充分，现在正式启动讨论！**
+
+📊 **讨论框架已建立，基础已夯实**
+
+🚀 **各位智能体，请根据你们的角色特色，围绕"${this.topic}"展开深度讨论！**
+
+⚔️ **记住：保持批判性思维，不要轻易认同，要敢于质疑和挑战！**
+
+💡 **让我们开始这场思维的盛宴吧！**`,
+      timestamp: new Date().toISOString(),
+      type: 'moderator',
+      phase: 'DISCUSSION_START'
+    };
+  }
+
+  /**
+   * 检测重复性讨论
+   * @param {Array} messages - 消息列表
+   * @returns {boolean} 是否有重复
+   */
+  detectRepetitiveDiscussion(messages) {
+    if (messages.length < 4) return false;
+    
+    // 简单的重复检测：检查最近几条消息的相似度
+    const recent = messages.slice(-4);
+    const keywords = ['同意', '认为', '觉得', '应该'];
+    
+    let repetitionCount = 0;
+    for (let i = 0; i < recent.length - 1; i++) {
+      for (let j = i + 1; j < recent.length; j++) {
+        const similarity = this.calculateMessageSimilarity(recent[i].text, recent[j].text);
+        if (similarity > 0.6) {
+          repetitionCount++;
+        }
+      }
+    }
+    
+    return repetitionCount > 2;
+  }
+
+  /**
+   * 检测讨论停滞
+   * @param {Array} agentMessages - 智能体消息
+   * @returns {boolean} 是否停滞
+   */
+  detectDiscussionStagnation(agentMessages) {
+    if (agentMessages.length < 6) return false;
+    
+    const recentMessages = agentMessages.slice(-6);
+    
+    // 检查是否缺乏新观点
+    const uniqueAgents = new Set(recentMessages.map(msg => msg.agentId));
+    const avgLength = recentMessages.reduce((sum, msg) => sum + msg.text.length, 0) / recentMessages.length;
+    
+    // 如果参与者太少或消息太短，可能是停滞
+    return uniqueAgents.size < 2 || avgLength < 50;
+  }
+
+  /**
+   * 计算消息相似度
+   * @param {string} text1 - 文本1
+   * @param {string} text2 - 文本2
+   * @returns {number} 相似度分数 (0-1)
+   */
+  calculateMessageSimilarity(text1, text2) {
+    const words1 = text1.split('');
+    const words2 = text2.split('');
+    
+    const set1 = new Set(words1);
+    const set2 = new Set(words2);
+    
+    const intersection = new Set([...set1].filter(x => set2.has(x)));
+    const union = new Set([...set1, ...set2]);
+    
+    return intersection.size / union.size;
   }
 }
 

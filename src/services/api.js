@@ -297,7 +297,7 @@ export const generateResponse = async (apiKey, model, messages, stream = false, 
             model: selectedModel,
             messages: messages,
             temperature: 0.8,
-            max_tokens: 1000,
+            max_tokens: 300,
             top_p: 0.9,
             frequency_penalty: 0.3,
             presence_penalty: 0.3
@@ -314,7 +314,7 @@ export const generateResponse = async (apiKey, model, messages, stream = false, 
         model: selectedModel,
         messages: messages,
         temperature: 0.8,
-        max_tokens: 1000,
+        max_tokens: 300,
         top_p: 0.9,
         frequency_penalty: 0.3,
         presence_penalty: 0.3,
@@ -382,6 +382,35 @@ export const generateResponse = async (apiKey, model, messages, stream = false, 
     });
     throw error;
   }
+};
+
+/**
+ * 限制输入消息总长度，优先保留最近的消息
+ * @param {Array} messages - 消息数组
+ * @param {number} maxLength - 最大总长度
+ * @returns {Array} - 限制后的消息数组
+ */
+const limitInputMessages = (messages, maxLength) => {
+  if (!messages || messages.length === 0) return [];
+  
+  let totalLength = 0;
+  const limitedMessages = [];
+  
+  // 从最新消息开始向前累加
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    const messageLength = msg.text ? msg.text.length : 0;
+    
+    // 检查添加这条消息是否会超过限制
+    if (totalLength + messageLength > maxLength) {
+      break;
+    }
+    
+    totalLength += messageLength;
+    limitedMessages.unshift(msg); // 添加到数组开头，保持时间顺序
+  }
+  
+  return limitedMessages;
 };
 
 /**
@@ -479,6 +508,8 @@ ${agent.description || ''}
 6. 🚀 推动讨论向更深层次发展，不满足于表面的答案
 7. 🎭 保持你的角色特色，不要被其他人的观点轻易说服
 8. 🔥 当讨论过于和谐时，要主动制造建设性的冲突
+9. 🎯 超级主持人发言重要性权重高，优先关注和回应主持人的引导
+10. 👤 真人用户发言重要性权重中高，重视用户的观点和问题
 
 回复格式要求：
 - 具体回应其他参与者的观点（如："对于小明刚才提到的xxx观点，我认为..."）
@@ -492,8 +523,11 @@ ${agent.description || ''}
     { role: 'system', content: systemPrompt }
   ];
   
+  // 限制输入消息总长度到4000字，优先保留最近的消息
+  const limitedMessages = limitInputMessages(messages, 4000 - systemPrompt.length);
+  
   // 为每条消息构建更清晰的上下文
-  messages.forEach(msg => {
+  limitedMessages.forEach(msg => {
     if (msg.agentId === agent.id) {
       // 当前智能体自己的消息
       formattedMessages.push({
@@ -506,15 +540,28 @@ ${agent.description || ''}
         role: 'user',
         content: `[系统] ${msg.text}`
       });
-         } else {
-       // 其他智能体的消息 - 明确标识发言者身份
-       const speakerName = msg.agentName || '其他参与者';
-       const speakerRole = msg.role || '参与者';
-       formattedMessages.push({
-         role: 'user',
-         content: `[${speakerName}(${speakerRole})发言] ${msg.text}`
-       });
-     }
+    } else if (msg.agentId === 'moderator') {
+      // 超级主持人消息 - 高权重标识
+      formattedMessages.push({
+        role: 'user',
+        content: `[🎭超级主持人-高权重] ${msg.text}`
+      });
+    } else if (msg.agentId === 'user') {
+      // 真人用户消息 - 中高权重标识
+      const userName = msg.userName || '用户';
+      formattedMessages.push({
+        role: 'user',
+        content: `[👤${userName}-中高权重] ${msg.text}`
+      });
+    } else {
+      // 其他智能体的消息 - 明确标识发言者身份
+      const speakerName = msg.agentName || '其他参与者';
+      const speakerRole = msg.role || '参与者';
+      formattedMessages.push({
+        role: 'user',
+        content: `[${speakerName}(${speakerRole})发言] ${msg.text}`
+      });
+    }
   });
   
   // 调用API生成回复

@@ -419,7 +419,7 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
   };
 
   // 用户参与讨论的处理函数
-  const handleUserParticipate = () => {
+  const handleUserParticipate = async () => {
     if (!userMessage.trim()) {
       alert('请输入您的发言内容');
       return;
@@ -436,7 +436,8 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
     };
 
     // 添加用户消息到讨论中
-    setMessages(prev => [...prev, userMessageObj]);
+    const updatedMessages = [...messages, userMessageObj];
+    setMessages(updatedMessages);
     
     // 清空输入框并隐藏输入区域
     setUserMessage('');
@@ -446,6 +447,34 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
     setTimeout(() => {
       forceScrollToBottom();
     }, 100);
+
+    // 如果开启了主持人功能，检查是否需要主持人回应用户的补充信息
+    if (moderatorEnabled && moderator && 
+        (moderator.discussionPhase.current === 'INFORMATION_GATHERING' || 
+         moderator.discussionPhase.current === 'TOPIC_ANALYSIS')) {
+      
+      console.log('🎭 用户提供补充信息，主持人准备回应...');
+      
+      try {
+        // 等待一下让UI更新
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // 让主持人处理用户的回应
+        const moderatorResponse = await moderator.moderate(updatedMessages);
+        
+        if (moderatorResponse) {
+          setMessages(prev => [...prev, moderatorResponse]);
+          
+          // 更新质量报告
+          const report = moderator.getQualityReport();
+          setQualityReport(report);
+          
+          console.log('🎭 主持人回应用户补充信息完成');
+        }
+      } catch (error) {
+        console.error('❌ 主持人处理用户回应失败:', error);
+      }
+    }
   };
 
   // 显示/隐藏用户输入区域
@@ -663,25 +692,9 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
     try {
       const currentMessages = [...messages];
       
-      // 第一步：检查是否需要主持人引导
-      // 排除系统消息和主持人自己的消息，只计算智能体的实际讨论消息
-      const agentMessages = currentMessages.filter(msg => 
-        msg.type === 'message' && agents.some(agent => agent.id === msg.agentId)
-      );
-      
-      // 主持人发言条件：从第2轮开始，每轮都让主持人先引导
-      const shouldModeratorSpeak = moderatorEnabled && moderator && agentMessages.length >= 1;
-      
-      console.log('🔍 主持人发言检查:', {
-        moderatorEnabled,
-        moderatorExists: !!moderator,
-        totalMessages: currentMessages.length,
-        agentMessages: agentMessages.length,
-        shouldModeratorSpeak
-      });
-      
-      if (shouldModeratorSpeak) {
-        console.log('🎭 主持人开始本轮引导...');
+      // 第一步：检查是否需要主持人引导（新的阶段性流程）
+      if (moderatorEnabled && moderator) {
+        console.log('🎭 主持人阶段性引导检查...');
         try {
           const moderatorGuidance = await moderator.moderate(currentMessages);
           console.log('🎭 主持人引导结果:', moderatorGuidance);
@@ -695,16 +708,22 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
             setQualityReport(report);
             console.log('📊 质量报告更新:', report);
             
+            // 检查当前阶段，如果在主题分析或信息收集阶段，等待用户回应
+            if (moderator.discussionPhase.current === 'TOPIC_ANALYSIS' || 
+                moderator.discussionPhase.current === 'INFORMATION_GATHERING') {
+              console.log('⏳ 等待用户补充信息，暂停智能体讨论');
+              setIsLoading(false);
+              return; // 不继续智能体讨论，等待用户回应
+            }
+            
             // 给用户一点时间阅读主持人的引导
             await new Promise(resolve => setTimeout(resolve, 1000));
           } else {
-            console.log('❌ 主持人返回了空结果');
+            console.log('ℹ️ 主持人此时不需要介入');
           }
         } catch (error) {
           console.error('❌ 主持人调用失败:', error);
         }
-      } else {
-        console.log('⏭️ 本轮跳过主持人引导（首轮或主持人未启用）');
       }
       
       const agentResponses = [];
