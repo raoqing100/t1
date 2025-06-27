@@ -53,12 +53,33 @@
 .hero .subtitle {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
   font-weight: 400;
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-lg);
   color: var(--text-secondary);
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
+}
+
+.hero .description {
+  max-width: 700px;
+  margin: 0 auto var(--space-2xl) auto;
+  padding: var(--space-lg);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
+}
+
+.hero .description p {
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  line-height: 1.7;
+  color: var(--text);
+  margin: 0;
+  font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 /* CTA按钮组 */

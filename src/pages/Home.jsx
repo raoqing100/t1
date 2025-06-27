@@ -64,7 +64,10 @@ const Home = () => {
     <div className="home">
       <section className="hero">
         <h1>睿思企业智能大脑系统</h1>
-          <p className="subtitle">企业级AI智能体协作平台，实现深度讨论与知识创新</p>
+          <p className="subtitle">革命性AI多智能体协作平台，打造企业级智慧决策生态</p>
+          <div className="description">
+            <p>通过多个AI智能体的深度对话与碰撞，激发创新思维，挖掘问题本质。支持智慧协调、企业决策、辩论博弈三大模式，为团队决策提供全方位智能支持。让AI智能体成为您的专业顾问团，共同探索复杂问题的最优解决方案。</p>
+          </div>
         
         <div className="cta-buttons">
           <Link to="/config" className="cta-button primary">开始配置</Link>
@@ -147,31 +150,7 @@ const Home = () => {
         </div>
       </section>
       
-      <section className="claude-info">
-        <h2>关于Claude 4模型</h2>
-        <div className="claude-content">
-          <div className="claude-text">
-            <p>
-              Claude 4是Anthropic公司推出的最先进的AI助手，具有卓越的推理能力、
-              更广泛的知识和更强的工具使用能力。
-            </p>
-            <p>
-              Claude 4在复杂推理、编程、数学和创意写作等任务上表现优异，
-              能够理解和处理更长的上下文，生成更高质量的回复。
-            </p>
-            <p>
-              <strong>注意：</strong> Claude 4模型仅对企业账户开放，
-              需要升级到企业账户才能使用该模型。
-            </p>
-            <Link to="/account" className="cta-button secondary">查看账号详情</Link>
-          </div>
-          <div className="claude-image">
-            <div className="image-placeholder">
-              Claude 4模型图片
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* 页尾开发方信息 */}
       <footer className="developer-footer">
