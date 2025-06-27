@@ -1505,26 +1505,7 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
         }}>
           {/* 左侧聊天区域 */}
           <div style={{ flex: '2.5', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-              <button 
-                onClick={resetDiscussion}
-                style={{
-                  backgroundColor: '#f44336',
-                  color: 'white',
-                  padding: '0.5rem 1rem',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
-              >
-                <span style={{ fontSize: '1rem' }}>🗑️</span>
-                重置讨论
-              </button>
-            </div>
+
             
             <div 
               ref={messagesContainerRef}
@@ -2579,6 +2560,42 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
             >
               <span>📋</span>
               复制对话
+            </button>
+
+            <button 
+              onClick={resetDiscussion}
+              disabled={messages.length < 1}
+              style={{
+                background: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
+                color: 'white',
+                padding: '0.75rem 1.25rem',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: messages.length < 1 ? 'not-allowed' : 'pointer',
+                opacity: messages.length < 1 ? 0.7 : 1,
+                fontWeight: 'bold',
+                flex: 1,
+                minWidth: '120px',
+                maxWidth: '160px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+              }}
+            >
+              <span>🗑️</span>
+              重置讨论
             </button>
           </div>
         </div>
