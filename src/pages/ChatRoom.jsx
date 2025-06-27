@@ -1096,12 +1096,26 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
 
   return (
     <div style={{ padding: '1rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ color: theme.colors.primary, margin: 0, textAlign: 'center', flex: 1 }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '1.5rem',
+        position: 'relative'
+      }}>
+        <h2 style={{ 
+          color: theme.colors.primary, 
+          margin: 0, 
+          textAlign: 'center', 
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'auto'
+        }}>
           多智能体头脑风暴
         </h2>
         {!isDiscussionStarted && (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto', zIndex: 1 }}>
             <button
               onClick={() => setShowSavedDiscussions(true)}
               style={{
@@ -1282,20 +1296,6 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
                     📁 上传文档
                   </button>
                 </div>
-                
-                <div style={{ 
-                  fontSize: '0.7rem', 
-                  color: '#666',
-                  backgroundColor: '#f8f9fa',
-                  padding: '0.5rem',
-                  borderRadius: '4px',
-                  border: '1px solid #e9ecef'
-                }}>
-                  💡 <strong>支持格式：</strong>.txt、.md、.json、.csv 等文本文件<br/>
-                  📝 <strong>编码建议：</strong>UTF-8编码可确保中文正常显示<br/>
-                  📏 <strong>大小限制：</strong>单个文件不超过10MB，内容不超过5000字符<br/>
-                  ⚠️ <strong>乱码处理：</strong>系统会自动检测编码问题并提供解决建议
-                </div>
               </div>
             </div>
             
@@ -1395,9 +1395,15 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
                 border: '1px solid #ddd',
                 fontSize: '0.9rem',
                 minHeight: '80px',
-                resize: 'vertical'
+                resize: 'vertical',
+                color: '#333'
               }}
-              placeholder="输入与讨论话题相关的背景资料、数据、案例等，帮助智能体更好地理解上下文..."
+              placeholder="输入与讨论话题相关的背景资料、数据、案例等，帮助智能体更好地理解上下文...
+
+💡 支持格式：.txt、.md、.json、.csv 等文本文件
+📝 编码建议：UTF-8编码可确保中文正常显示  
+📏 大小限制：单个文件不超过10MB，内容不超过5000字符
+⚠️ 乱码处理：系统会自动检测编码问题并提供解决建议"
             />
           </div>
 
