@@ -640,15 +640,25 @@ export default function AgentConfig({ onAgentsConfigured }) {
           <button 
             onClick={saveCompleteConfig}
             style={{
-              backgroundColor: '#22c55e',
+              background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
               color: 'white',
-              padding: '0.5rem 1rem',
+              padding: '0.75rem 1.25rem',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '6px',
               cursor: 'pointer',
               fontWeight: 'bold',
               fontSize: '0.9rem',
-              alignSelf: 'flex-start'
+              alignSelf: 'flex-start',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
             }}
           >
             💾 保存配置
@@ -660,69 +670,146 @@ export default function AgentConfig({ onAgentsConfigured }) {
       <div style={{ 
         marginBottom: '1.5rem',
         display: 'flex',
-        gap: '0.5rem',
-        flexWrap: 'wrap'
+        gap: '0.75rem',
+        flexWrap: 'wrap',
+        justifyContent: 'center'
       }}>
-        <button 
-          onClick={() => setShowTemplates(!showTemplates)}
-          style={{
-            backgroundColor: theme.colors.primary,
-            color: 'white',
-            padding: '0.5rem 1rem',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '0.875rem'
-          }}
-        >
-          📋 预设模板
-        </button>
-        
-
-        
-        <button 
-          onClick={resetToDefault}
-          style={{
-            backgroundColor: '#94a3b8',
-            color: 'white',
-            padding: '0.5rem 1rem',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '0.875rem'
-          }}
-        >
-          🔄 重置默认
-        </button>
-        
         <button 
           onClick={addAgent}
           style={{
-            backgroundColor: '#10b981',
+            background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
             color: 'white',
-            padding: '0.5rem 1rem',
+            padding: '0.75rem 1.25rem',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '6px',
             cursor: 'pointer',
-            fontSize: '0.875rem'
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)',
+            transition: 'all 0.3s ease',
+            minWidth: '140px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-1px)';
+            e.target.style.boxShadow = '0 6px 20px rgba(6, 182, 212, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 12px rgba(6, 182, 212, 0.3)';
           }}
         >
           ➕ 添加智能体
         </button>
         
         <button 
-          onClick={() => setShowModeratorConfig(!showModeratorConfig)}
+          onClick={resetToDefault}
           style={{
-            backgroundColor: '#7c3aed',
+            background: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
             color: 'white',
-            padding: '0.5rem 1rem',
+            padding: '0.75rem 1.25rem',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '6px',
             cursor: 'pointer',
-            fontSize: '0.875rem'
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+            transition: 'all 0.3s ease',
+            minWidth: '140px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-1px)';
+            e.target.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
           }}
         >
-          👨‍💼 主持人配置
+          🔄 重置为默认
+        </button>
+        
+        <button 
+          onClick={() => setShowModeratorConfig(!showModeratorConfig)}
+          style={{
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+            color: 'white',
+            padding: '0.75rem 1.25rem',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+            transition: 'all 0.3s ease',
+            minWidth: '140px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-1px)';
+            e.target.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
+          }}
+        >
+          🎭 配置主持人
+        </button>
+        
+        <button 
+          onClick={() => setShowTemplates(!showTemplates)}
+          style={{
+            background: 'linear-gradient(135deg, #84cc16 0%, #a3e635 100%)',
+            color: 'white',
+            padding: '0.75rem 1.25rem',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 12px rgba(132, 204, 22, 0.3)',
+            transition: 'all 0.3s ease',
+            minWidth: '140px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-1px)';
+            e.target.style.boxShadow = '0 6px 20px rgba(132, 204, 22, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 12px rgba(132, 204, 22, 0.3)';
+          }}
+        >
+          📋 预设模板
+        </button>
+        
+        <button 
+          onClick={() => {
+            // 这里可以添加加载配置的逻辑
+            alert('加载配置功能正在开发中...');
+          }}
+          style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
+            color: 'white',
+            padding: '0.75rem 1.25rem',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+            transition: 'all 0.3s ease',
+            minWidth: '140px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-1px)';
+            e.target.style.boxShadow = '0 6px 20px rgba(245, 158, 11, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)';
+          }}
+        >
+          📂 加载配置
         </button>
       </div>
 
@@ -736,16 +823,29 @@ export default function AgentConfig({ onAgentsConfigured }) {
           border: '1px solid #ddd'
         }}>
           <h4 style={{ marginBottom: '1rem', color: theme.colors.primary }}>选择预设模板：</h4>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
             <button 
               onClick={() => applyTemplate('brainstorm')}
               style={{
-                backgroundColor: '#3b82f6',
+                background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
                 color: 'white',
-                padding: '0.5rem 1rem',
+                padding: '0.75rem 1.25rem',
                 border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '0.9rem',
+                boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)',
+                transition: 'all 0.3s ease',
+                minWidth: '160px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(6, 182, 212, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(6, 182, 212, 0.3)';
               }}
             >
               💡 头脑风暴团队
@@ -753,12 +853,25 @@ export default function AgentConfig({ onAgentsConfigured }) {
             <button 
               onClick={() => applyTemplate('debate')}
               style={{
-                backgroundColor: '#ef4444',
+                background: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
                 color: 'white',
-                padding: '0.5rem 1rem',
+                padding: '0.75rem 1.25rem',
                 border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '0.9rem',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                transition: 'all 0.3s ease',
+                minWidth: '160px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
               }}
             >
               🗣️ 辩论对战团队
@@ -766,12 +879,25 @@ export default function AgentConfig({ onAgentsConfigured }) {
             <button 
               onClick={() => applyTemplate('expert')}
               style={{
-                backgroundColor: '#8b5cf6',
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
                 color: 'white',
-                padding: '0.5rem 1rem',
+                padding: '0.75rem 1.25rem',
                 border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '0.9rem',
+                boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+                transition: 'all 0.3s ease',
+                minWidth: '160px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
               }}
             >
               🧠 专业咨询团队
@@ -909,16 +1035,27 @@ export default function AgentConfig({ onAgentsConfigured }) {
               <button 
                 onClick={() => removeAgent(agent.id)}
                 style={{
-                  backgroundColor: '#f43f5e',
+                  background: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
                   color: 'white',
-                  padding: '0.25rem 0.5rem',
+                  padding: '0.5rem 0.75rem',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  fontSize: '0.875rem'
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-1px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 2px 6px rgba(239, 68, 68, 0.3)';
                 }}
               >
-                删除
+                🗑️ 删除
               </button>
             )}
           </div>
@@ -1025,24 +1162,13 @@ export default function AgentConfig({ onAgentsConfigured }) {
         </div>
       ))}
       
-      <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
-        <button 
-          onClick={saveAgentConfigs}
-          style={{
-            backgroundColor: theme.colors.primary,
-            color: 'white',
-            padding: '0.75rem 1.5rem',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '1rem',
-            flex: 1
-          }}
-        >
-          保存配置
-        </button>
-        
+      <div style={{ 
+        marginTop: '2rem', 
+        display: 'flex', 
+        gap: '1rem',
+        justifyContent: 'center',
+        flexWrap: 'wrap'
+      }}>
         <button 
           onClick={() => {
             // 检查是否至少有一个智能体配置了名称和角色
@@ -1055,18 +1181,28 @@ export default function AgentConfig({ onAgentsConfigured }) {
             }
           }}
           style={{
-            backgroundColor: '#4caf50',
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
             color: 'white',
-            padding: '0.75rem 1.5rem',
+            padding: '1rem 2rem',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '8px',
             cursor: 'pointer',
             fontWeight: 'bold',
-            fontSize: '1rem',
-            flex: 1
+            fontSize: '1.1rem',
+            minWidth: '200px',
+            boxShadow: '0 6px 20px rgba(99, 102, 241, 0.4)',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 8px 25px rgba(99, 102, 241, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 6px 20px rgba(99, 102, 241, 0.4)';
           }}
         >
-          开始聊天
+          🚀 开始讨论
         </button>
       </div>
       
