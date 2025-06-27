@@ -63,26 +63,109 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
     const files = Array.from(event.target.files);
     
     files.forEach(file => {
+      // 检查文件大小限制（10MB）
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`文件 ${file.name} 过大，请选择小于10MB的文件`);
+        return;
+      }
+      
+      // 检查文件类型
+      const allowedTypes = [
+        'text/plain',
+        'text/markdown',
+        'application/json',
+        'text/csv',
+        'application/pdf', // 暂时支持，但会提示
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      
+      // 如果是不支持的文件类型，给出提示
+      if (!allowedTypes.includes(file.type) && !file.name.match(/\.(txt|md|json|csv)$/i)) {
+        const supportMessage = `文件 ${file.name} 的格式可能不被完全支持。
+建议使用：
+• .txt 文本文件
+• .md Markdown文件  
+• .json JSON文件
+• .csv 表格文件
+
+是否继续上传？`;
+        
+        if (!window.confirm(supportMessage)) {
+          return;
+        }
+      }
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target.result;
+        
+        // 验证内容是否可读
+        if (!content || typeof content !== 'string') {
+          alert(`文件 ${file.name} 内容无法识别，请确认是文本格式文件`);
+          return;
+        }
+        
+        // 检查是否包含乱码字符
+        // eslint-disable-next-line no-control-regex
+        const hasGarbledText = /[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(content);
+        if (hasGarbledText) {
+          const retryMessage = `文件 ${file.name} 可能包含特殊字符或编码问题。
+          
+建议：
+• 确保文件是UTF-8编码
+• 使用记事本另存为UTF-8格式
+• 或者直接复制文本内容到知识库输入框
+
+是否仍要继续添加此文件？`;
+          
+          if (!window.confirm(retryMessage)) {
+            return;
+          }
+        }
+        
         const newFile = {
           id: Date.now() + Math.random(),
           name: file.name,
           content: content,
           type: file.type,
-          uploadedAt: new Date().toISOString()
+          uploadedAt: new Date().toISOString(),
+          size: file.size,
+          hasIssues: hasGarbledText
         };
         
         setUploadedFiles(prev => [...prev, newFile]);
         
         // 将文件内容添加到知识库
-        const fileContent = `\n\n📄 文件: ${file.name}\n${content}`;
+        const fileContent = `\n\n📄 文件: ${file.name}${hasGarbledText ? ' (可能包含编码问题)' : ''}\n${content}`;
         setKnowledgeBase(prev => prev + fileContent);
+        
+        // 成功上传提示
+        console.log(`✅ 文件 ${file.name} 上传成功，大小: ${(file.size / 1024).toFixed(2)}KB`);
       };
       
-      reader.readAsText(file);
+      // 处理文件读取错误
+      reader.onerror = (e) => {
+        console.error('文件读取失败:', e);
+        alert(`文件 ${file.name} 读取失败。
+
+可能的原因：
+• 文件已损坏
+• 文件格式不支持
+• 文件过大
+
+建议：
+• 检查文件完整性
+• 转换为.txt格式
+• 直接复制文本内容`);
+      };
+      
+      // 指定UTF-8编码读取文本文件，解决中文乱码问题
+      reader.readAsText(file, 'UTF-8');
     });
+    
+    // 清空input值，允许重复选择同一文件
+    event.target.value = '';
   };
 
   // 删除上传的文件
@@ -1105,32 +1188,57 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
               <label htmlFor="knowledge" style={{ fontWeight: 'bold' }}>
                 背景知识库（可选）：
               </label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="file"
-                  id="fileUpload"
-                  multiple
-                  accept=".txt,.md,.doc,.docx"
-                  onChange={handleFileUpload}
-                  style={{ display: 'none' }}
-                />
-                <button
-                  onClick={() => document.getElementById('fileUpload').click()}
-                  style={{
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '0.5rem 0.75rem',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem'
-                  }}
-                >
-                  📁 上传文档
-                </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type="file"
+                    id="fileUpload"
+                    multiple
+                    accept=".txt,.md,.doc,.docx,.json,.csv"
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    onClick={() => document.getElementById('fileUpload').click()}
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '0.5rem 0.75rem',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = 'translateY(-1px)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.3)';
+                    }}
+                  >
+                    📁 上传文档
+                  </button>
+                </div>
+                
+                <div style={{ 
+                  fontSize: '0.7rem', 
+                  color: '#666',
+                  backgroundColor: '#f8f9fa',
+                  padding: '0.5rem',
+                  borderRadius: '4px',
+                  border: '1px solid #e9ecef'
+                }}>
+                  💡 <strong>支持格式：</strong>.txt、.md、.json、.csv 等文本文件<br/>
+                  📝 <strong>编码建议：</strong>UTF-8编码可确保中文正常显示<br/>
+                  📏 <strong>大小限制：</strong>单个文件不超过10MB
+                </div>
               </div>
             </div>
             
@@ -1140,33 +1248,67 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
                 <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem' }}>
                   已上传文件：
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {uploadedFiles.map(file => (
-                    <div key={file.id} style={{
-                      backgroundColor: '#e3f2fd',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.8rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem'
-                    }}>
-                      📄 {file.name}
-                      <button
-                        onClick={() => handleRemoveFile(file.id)}
-                        style={{
-                          backgroundColor: 'transparent',
-                          border: 'none',
-                          color: '#f44336',
-                          cursor: 'pointer',
-                          fontSize: '0.8rem',
-                          padding: '0'
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {uploadedFiles.map(file => {
+                    const sizeKB = file.size ? (file.size / 1024).toFixed(1) : '未知';
+                    const uploadTime = file.uploadedAt ? new Date(file.uploadedAt).toLocaleTimeString() : '';
+                    
+                    return (
+                      <div key={file.id} style={{
+                        backgroundColor: file.hasIssues ? '#fff3cd' : '#e3f2fd',
+                        padding: '0.5rem',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        border: file.hasIssues ? '1px solid #ffc107' : '1px solid #e3f2fd'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                            <span>📄</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 'bold', color: file.hasIssues ? '#856404' : '#333' }}>
+                                {file.name}
+                                {file.hasIssues && <span style={{ color: '#f57c00', marginLeft: '0.25rem' }}>⚠️</span>}
+                              </div>
+                              <div style={{ color: '#666', fontSize: '0.7rem' }}>
+                                {sizeKB}KB • {uploadTime}
+                                {file.hasIssues && <span style={{ color: '#f57c00' }}> • 可能有编码问题</span>}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveFile(file.id)}
+                            style={{
+                              backgroundColor: 'transparent',
+                              border: 'none',
+                              color: '#f44336',
+                              cursor: 'pointer',
+                              fontSize: '1rem',
+                              padding: '0.25rem',
+                              borderRadius: '3px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            title="删除文件"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                        {file.hasIssues && (
+                          <div style={{ 
+                            marginTop: '0.25rem', 
+                            padding: '0.25rem', 
+                            backgroundColor: '#ffeaa7', 
+                            borderRadius: '3px',
+                            fontSize: '0.7rem',
+                            color: '#d63031'
+                          }}>
+                            💡 提示：此文件可能包含特殊字符，建议转换为UTF-8编码格式重新上传
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
