@@ -63,7 +63,7 @@ const Home = () => {
   return (
     <div className="home">
       <section className="hero">
-        <h1>企业多智能大脑系统</h1>
+        <h1>睿思企业智能大脑系统</h1>
           <p className="subtitle">企业级AI智能体协作平台，实现深度讨论与知识创新</p>
         
         <div className="cta-buttons">

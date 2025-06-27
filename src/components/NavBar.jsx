@@ -13,7 +13,7 @@ const NavBar = ({ toggleTheme, isDarkMode }) => {
   return (
     <nav className="navbar">
       <div className="logo">
-        <Link to="/">企业多智能大脑</Link>
+        <Link to="/">睿思企业智能大脑</Link>
       </div>
       
       <div className="nav-links">

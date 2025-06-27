@@ -1790,7 +1790,7 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
                     onClick={handleUserParticipate}
                     disabled={!userMessage.trim() || userMessage.length > 500}
                     style={{
-                      backgroundColor: '#E53E3E',
+                      background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                       color: 'white',
                       padding: '0.5rem 1rem',
                       border: 'none',
@@ -2166,7 +2166,7 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
               onClick={toggleUserInput}
               disabled={!isDiscussionStarted}
               style={{
-                backgroundColor: '#E53E3E',
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                 color: 'white',
                 padding: '0.75rem 1.25rem',
                 border: 'none',
@@ -2182,8 +2182,16 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
                 justifyContent: 'center',
                 gap: '0.5rem',
                 fontSize: '0.9rem',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                transition: 'all 0.2s ease'
+                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(99, 102, 241, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.3)';
               }}
             >
               <span>👤</span>
@@ -2244,7 +2252,7 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
               onClick={summarizeDiscussion}
               disabled={isLoading || isSummarizing || messages.length < 4}
               style={{
-                backgroundColor: theme.colors.secondary,
+                background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
                 color: 'white',
                 padding: '0.75rem 1.25rem',
                 border: 'none',
@@ -2288,7 +2296,7 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
               onClick={openSaveModal}
               disabled={messages.length < 2}
               style={{
-                backgroundColor: '#28a745',
+                background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
                 color: 'white',
                 padding: '0.75rem 1.25rem',
                 border: 'none',
@@ -2316,7 +2324,7 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
               onClick={copyConversationToClipboard}
               disabled={messages.length < 2}
               style={{
-                backgroundColor: '#17a2b8',
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
                 color: 'white',
                 padding: '0.75rem 1.25rem',
                 border: 'none',
