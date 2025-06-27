@@ -404,12 +404,12 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
     }
   };
 
-  // 智能滚动控制
+  // 智能滚动控制 - 修改为不强制滚动流式消息
   useEffect(() => {
     if (autoScroll && !userScrolledUp) {
-    scrollToBottom();
+      scrollToBottom();
     }
-  }, [messages, streamingMessage, autoScroll, userScrolledUp]);
+  }, [messages, autoScroll, userScrolledUp]); // 移除streamingMessage依赖，避免流式消息时强制滚动
 
   // 手动滚动到底部的函数
   const forceScrollToBottom = () => {
@@ -2151,109 +2151,7 @@ export default function ChatRoom({ agents: propAgents, selectedDiscussionId, onV
           padding: '1rem',
           zIndex: 999
         }}>
-          {/* 用户参与讨论输入区域 */}
-          {showUserInput && (
-            <div style={{
-              backgroundColor: '#fff3cd',
-              borderRadius: '8px',
-              padding: '1rem',
-              marginBottom: '1rem',
-              border: '2px solid #E53E3E',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}>
-              <h4 style={{ 
-                margin: '0 0 1rem 0', 
-                color: '#E53E3E', 
-                fontSize: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <span>👤</span>
-                参与讨论
-              </h4>
-              
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                <div style={{ flex: '0 0 200px' }}>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem', 
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem'
-                  }}>
-                    您的名字：
-                  </label>
-                  <input
-                    type="text"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    placeholder="请输入您的名字"
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '0.9rem'
-                    }}
-                  />
-                </div>
-                
-                <div style={{ flex: 1 }}>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem', 
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem'
-                  }}>
-                    您的发言：
-                  </label>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <textarea
-                      id="user-message-input"
-                      value={userMessage}
-                      onChange={(e) => setUserMessage(e.target.value)}
-                      placeholder="请输入您对这个话题的观点、建议或问题..."
-                      rows={2}
-                      style={{
-                        flex: 1,
-                        padding: '0.5rem',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '0.9rem',
-                        resize: 'none'
-                      }}
-                    />
-                    <button 
-                      onClick={handleUserParticipate}
-                      disabled={!userMessage.trim() || userMessage.length > 500}
-                      style={{
-                        backgroundColor: '#E53E3E',
-                        color: 'white',
-                        padding: '0.5rem 1rem',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: !userMessage.trim() || userMessage.length > 500 ? 'not-allowed' : 'pointer',
-                        opacity: !userMessage.trim() || userMessage.length > 500 ? 0.7 : 1,
-                        fontSize: '0.9rem',
-                        fontWeight: 'bold',
-                        height: 'fit-content'
-                      }}
-                    >
-                      发布发言
-                    </button>
-                  </div>
-                  <div style={{ 
-                    fontSize: '0.8rem',
-                    color: userMessage.length > 500 ? '#dc3545' : '#6c757d',
-                    marginTop: '0.25rem'
-                  }}>
-                    字数: {userMessage.length}/500
-                    {userMessage.length > 500 && <span style={{ color: '#dc3545', marginLeft: '0.5rem' }}>超出字数限制</span>}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {/* 操作按钮区域 */}
           <div style={{ 
