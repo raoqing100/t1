@@ -167,6 +167,7 @@ export default function AgentConfig({ onAgentsConfigured }) {
   const [showModeratorConfig, setShowModeratorConfig] = useState(false);
   const [showDebateGameConfig, setShowDebateGameConfig] = useState(false);
   const [moderatorConfig, setModeratorConfig] = useState(moderatorConfigStorage.getModeratorConfig());
+  const [configMode, setConfigMode] = useState('smart'); // 配置模式：smart, enterprise, debate
   
   // 配置管理相关状态
   const [currentConfigId, setCurrentConfigId] = useState(null);
@@ -200,26 +201,58 @@ export default function AgentConfig({ onAgentsConfigured }) {
     moderatorConfigStorage.saveModeratorConfig(newConfig);
   };
 
-  // 处理辩论博弈策略配置加载
-  const handleDebateGameConfigLoad = (debateConfig) => {
-    // 将辩论博弈策略的agents转换为当前页面格式
-    const convertedAgents = debateConfig.agents.map((agent, index) => ({
-      id: index + 1,
-      name: agent.name,
-      role: agent.role === '革新者' ? '创意者' : 
-            agent.role === '守护者' ? '批评者' :
-            agent.role === '分析师' ? '分析师' :
-            agent.role === '关怀者' ? '协调者' :
-            agent.role === '执行者' ? '执行者' :
-            agent.role === '质疑者' ? '专家' : '其他',
-      apiKey: '',
-      description: agent.description
-    }));
+  // 处理配置模式切换
+  const handleModeChange = (mode) => {
+    setConfigMode(mode);
     
-    setAgents(convertedAgents);
-    setConfigName(debateConfig.name);
-    setConfigDescription(debateConfig.description);
-    alert('辩论博弈策略已加载！请为每个智能体配置API密钥。');
+    if (mode === 'smart') {
+      // 智慧协调模式
+      const smartAgents = [
+        { id: 1, name: '战略分析师', role: '分析师', apiKey: '', description: '专注于战略思考和趋势分析，提供前瞻性洞察' },
+        { id: 2, name: '创新专家', role: '创意者', apiKey: '', description: '推动创新思维，提出突破性想法和解决方案' },
+        { id: 3, name: '实务专家', role: '执行者', apiKey: '', description: '关注可执行性，提供务实的实施建议' },
+        { id: 4, name: '协调员', role: '协调者', apiKey: '', description: '促进团队合作，整合不同观点达成共识' },
+        { id: 5, name: '质量监督', role: '批评者', apiKey: '', description: '确保方案质量，指出潜在问题和改进点' },
+        { id: 6, name: '记录员', role: '记录者', apiKey: '', description: '记录讨论要点，整理总结关键信息' },
+        { id: 7, name: '主持人', role: '主持人', apiKey: '', description: '引导讨论进程，确保讨论高效有序进行' }
+      ];
+      setAgents(smartAgents);
+      setConfigName('智慧协调团队');
+      setConfigDescription('7个智慧协调的智能体角色，通过建设性协调实现深度思维融合');
+    } else if (mode === 'enterprise') {
+      // 企业决策模式
+      const enterpriseAgents = [
+        { id: 1, name: 'CEO', role: '主持人', apiKey: '', description: '企业最高决策者，负责战略方向和最终决策' },
+        { id: 2, name: 'CTO', role: '专家', apiKey: '', description: '技术领导者，负责技术战略和创新驱动' },
+        { id: 3, name: 'CFO', role: '分析师', apiKey: '', description: '财务专家，负责资金规划和风险控制' },
+        { id: 4, name: 'CMO', role: '创意者', apiKey: '', description: '营销领导者，负责品牌建设和市场影响力' },
+        { id: 5, name: 'COO', role: '执行者', apiKey: '', description: '运营核心，负责日常运营和流程优化' },
+        { id: 6, name: '产品总监', role: '协调者', apiKey: '', description: '产品策略专家，负责产品全生命周期管理' },
+        { id: 7, name: 'CHRO', role: '其他', apiKey: '', description: '人力资源专家，负责人才管理和组织发展' },
+        { id: 8, name: '法务总监', role: '批评者', apiKey: '', description: '法律风险专家，负责合规和风险防范' }
+      ];
+      setAgents(enterpriseAgents);
+      setConfigName('企业决策团队');
+      setConfigDescription('8个企业高管角色，模拟真实企业高管团队决策过程');
+    } else if (mode === 'debate') {
+      // 辩论博弈模式
+      const debateAgents = [
+        { id: 1, name: '激进先锋', role: '创意者', apiKey: '', description: '激进的变革推动者，质疑传统，追求突破性创新。不满足于渐进式改良，主张颠覆性变革。' },
+        { id: 2, name: '稳健卫士', role: '批评者', apiKey: '', description: '坚定的传统价值守护者，重视稳定性和延续性。相信渐进式改进胜过激进变革。' },
+        { id: 3, name: '逻辑大师', role: '分析师', apiKey: '', description: '坚持数据驱动的理性分析师，要求一切观点都有充分的事实和逻辑支撑。' },
+        { id: 4, name: '人文关怀者', role: '协调者', apiKey: '', description: '关注人性和情感因素的人文主义者，强调决策对人的影响。' },
+        { id: 5, name: '实战专家', role: '执行者', apiKey: '', description: '关注实际执行的务实派，重视可操作性、成本控制和实际效果。' },
+        { id: 6, name: '质疑大师', role: '专家', apiKey: '', description: '专业的魔鬼代言人，善于发现任何方案的漏洞和问题。' }
+      ];
+      setAgents(debateAgents);
+      setConfigName('辩论博弈模式');
+      setConfigDescription('6个立场鲜明的对立角色进行激烈辩论，推动深度思考和全面认知');
+    }
+  };
+
+  // 处理辩论博弈策略配置加载（保留兼容性）
+  const handleDebateGameConfigLoad = (debateConfig) => {
+    handleModeChange('debate');
   };
 
   // 保存智能体配置
@@ -256,6 +289,43 @@ export default function AgentConfig({ onAgentsConfigured }) {
       alert('配置保存失败');
     }
   };
+
+  // 首先处理URL参数（优先级最高）
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const modeParam = urlParams.get('mode');
+    
+    console.log('🔍 AgentConfig URL检查:', {
+      search: location.search,
+      modeParam: modeParam,
+      currentConfigMode: configMode
+    });
+    
+    if (modeParam === 'debate') {
+      console.log('🔥 从URL参数强制加载辩论博弈模式');
+      setConfigMode('debate');
+      // 直接设置辩论博弈模式的智能体
+      const debateAgents = [
+        { id: 1, name: '激进先锋', role: '创意者', apiKey: '', description: '激进的变革推动者，质疑传统，追求突破性创新。不满足于渐进式改良，主张颠覆性变革。' },
+        { id: 2, name: '稳健卫士', role: '批评者', apiKey: '', description: '坚定的传统价值守护者，重视稳定性和延续性。相信渐进式改进胜过激进变革。' },
+        { id: 3, name: '逻辑大师', role: '分析师', apiKey: '', description: '坚持数据驱动的理性分析师，要求一切观点都有充分的事实和逻辑支撑。' },
+        { id: 4, name: '人文关怀者', role: '协调者', apiKey: '', description: '关注人性和情感因素的人文主义者，强调决策对人的影响。' },
+        { id: 5, name: '实战专家', role: '执行者', apiKey: '', description: '关注实际执行的务实派，重视可操作性、成本控制和实际效果。' },
+        { id: 6, name: '质疑大师', role: '专家', apiKey: '', description: '专业的魔鬼代言人，善于发现任何方案的漏洞和问题。' }
+      ];
+      setAgents(debateAgents);
+      setConfigName('辩论博弈模式');
+      setConfigDescription('6个立场鲜明的对立角色进行激烈辩论，推动深度思考和全面认知');
+    } else if (modeParam === 'enterprise') {
+      console.log('🏢 从URL参数加载企业决策模式');
+      setConfigMode('enterprise');
+      handleModeChange('enterprise');
+    } else if (modeParam === 'smart') {
+      console.log('🧠 从URL参数加载智慧协调模式');
+      setConfigMode('smart');
+      handleModeChange('smart');
+    }
+  }, [location.search]);
 
   // 检查是否需要加载特定配置
   useEffect(() => {
@@ -365,6 +435,21 @@ export default function AgentConfig({ onAgentsConfigured }) {
     setAgents([...defaultAgents]);
   };
 
+  // 初始化配置模式（仅在没有URL参数时使用）
+  React.useEffect(() => {
+    // 延迟检查，确保URL参数处理优先执行
+    setTimeout(() => {
+      const urlParams = new URLSearchParams(location.search);
+      const modeParam = urlParams.get('mode');
+      
+      if (!modeParam && configMode === 'smart') {
+        // 没有URL参数且还是默认状态时，才设置智慧协调模式
+        console.log('使用默认智慧协调模式');
+        handleModeChange('smart');
+      }
+    }, 100);
+  }, []);
+
   // 自动保存默认配置到localStorage
   React.useEffect(() => {
     const savedDefaultConfig = localStorage.getItem('defaultAgentConfig');
@@ -394,8 +479,101 @@ export default function AgentConfig({ onAgentsConfigured }) {
         color: theme.colors.primary,
         fontWeight: 'bold'
       }}>
-        智能体配置
+        配置智能体
       </h2>
+
+      {/* 调试信息面板 */}
+      <div style={{
+        backgroundColor: '#f0f8ff',
+        border: '1px solid #2196f3',
+        borderRadius: '8px',
+        padding: '10px',
+        marginBottom: '1rem',
+        fontSize: '12px'
+      }}>
+        <strong>🔍 调试信息：</strong><br/>
+        URL搜索参数: {location.search || '(无)'}<br/>
+        当前模式: {configMode}<br/>
+        智能体数量: {agents.length}<br/>
+        配置名称: {configName || '(未设置)'}
+      </div>
+
+      {/* 配置模式选择 */}
+      <div style={{ marginBottom: '2rem' }}>
+        <h3 style={{ marginBottom: '1rem', color: theme.colors.primary, fontSize: '1.1rem' }}>
+          选择配置模式
+        </h3>
+        
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: '1rem', 
+          marginBottom: '1rem' 
+        }}>
+          <button 
+            onClick={() => handleModeChange('smart')}
+            style={{
+              backgroundColor: configMode === 'smart' ? '#7c3aed' : '#f8f9fa',
+              color: configMode === 'smart' ? 'white' : '#333',
+              border: '2px solid #7c3aed',
+              borderRadius: '12px',
+              padding: '1rem',
+              cursor: 'pointer',
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '0.9rem',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            🧠 智慧协调模式
+          </button>
+          <button 
+            onClick={() => handleModeChange('enterprise')}
+            style={{
+              backgroundColor: configMode === 'enterprise' ? '#7c3aed' : '#f8f9fa',
+              color: configMode === 'enterprise' ? 'white' : '#333',
+              border: '2px solid #7c3aed',
+              borderRadius: '12px',
+              padding: '1rem',
+              cursor: 'pointer',
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '0.9rem',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            🏢 企业决策模式
+          </button>
+          <button 
+            onClick={() => handleModeChange('debate')}
+            style={{
+              backgroundColor: configMode === 'debate' ? '#7c3aed' : '#f8f9fa',
+              color: configMode === 'debate' ? 'white' : '#333',
+              border: '2px solid #7c3aed',
+              borderRadius: '12px',
+              padding: '1rem',
+              cursor: 'pointer',
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '0.9rem',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            🔥 辩论博弈模式
+          </button>
+        </div>
+        <div style={{
+          padding: '1rem',
+          backgroundColor: 'rgba(124, 58, 237, 0.1)',
+          borderRadius: '8px',
+          fontSize: '0.9rem',
+          color: '#5b21b6'
+        }}>
+          {configMode === 'smart' && '7个智慧协调的智能体角色，通过建设性协调实现深度思维融合'}
+          {configMode === 'enterprise' && '8个企业高管角色，模拟真实企业高管团队决策过程'}
+          {configMode === 'debate' && '6个立场鲜明的对立角色进行激烈辩论，推动深度思考和全面认知'}
+        </div>
+      </div>
 
       {/* 配置基本信息 */}
       <div style={{
@@ -500,21 +678,7 @@ export default function AgentConfig({ onAgentsConfigured }) {
           📋 预设模板
         </button>
         
-        <button 
-          onClick={() => setShowDebateGameConfig(true)}
-          style={{
-            backgroundColor: '#ef4444',
-            color: 'white',
-            padding: '0.5rem 1rem',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-            fontWeight: 'bold'
-          }}
-        >
-          🔥 辩论博弈策略
-        </button>
+
         
         <button 
           onClick={resetToDefault}

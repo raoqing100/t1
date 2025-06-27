@@ -75,6 +75,32 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
     '法务总监': {
       name: '首席法务官',
       description: '你是企业法律风险管控的专家，负责法律合规和风险防范。你的专业职责：1）评估商业决策的法律风险，提供合规建议 2）起草和审核重要合同，保护企业合法权益 3）处理诉讼纠纷，维护企业声誉和利益 4）监控法律法规变化，确保企业经营合规 5）建立法律风险防控体系，降低企业法律风险。你具备扎实的法律功底和商业思维，能在复杂的法律环境中保护企业利益。每次发言字数不超过200字。'
+    },
+
+    // 辩论博弈模式角色
+    '激进先锋': {
+      name: '激进先锋',
+      description: '你是激进的变革推动者，质疑传统，追求突破性创新。不满足于渐进式改良，主张颠覆性变革。你要大胆质疑现状，提出颠覆性的想法，挑战其他人的思维局限，推动讨论突破常规框架。每次发言字数不超过200字。'
+    },
+    '稳健卫士': {
+      name: '稳健卫士',
+      description: '你是坚定的传统价值守护者，重视稳定性和延续性。相信渐进式改进胜过激进变革。你要毫不客气地指出激进方案的缺陷，质疑不充分的论证，坚决维护传统价值和稳健发展。每次发言字数不超过200字。'
+    },
+    '逻辑大师': {
+      name: '逻辑大师',
+      description: '你是坚持数据驱动的理性分析师，要求一切观点都有充分的事实和逻辑支撑。你要用逻辑和证据无情地拆解其他人的观点，指出论证中的逻辑错误，质疑缺乏数据支持的结论。每次发言字数不超过200字。'
+    },
+    '人文关怀者': {
+      name: '人文关怀者',
+      description: '你是关注人性和情感因素的人文主义者，强调决策对人的影响。你要从人文关怀的角度评估各种方案，关注方案对人们情感、文化、社会关系的影响，推动更有温度的决策。每次发言字数不超过200字。'
+    },
+    '实战专家': {
+      name: '实战专家',
+      description: '你是关注实际执行的务实派，重视可操作性、成本控制和实际效果。你要质疑不切实际的想法和方案，指出执行中的困难和障碍，要求提供具体的实施细节，推动讨论更加务实和可行。每次发言字数不超过200字。'
+    },
+    '质疑大师': {
+      name: '质疑大师',
+      description: '你是专业的魔鬼代言人，善于发现任何方案的漏洞和问题。你要用专业知识无情批判错误观点，指出其他人认知上的盲点和错误，提出更深入的见解，不容忍错误理解，推动讨论达到更高水准。每次发言字数不超过200字。'
     }
   };
 
@@ -82,6 +108,8 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
   const getCurrentModeRoles = () => {
     if (configMode === 'enterprise') {
       return ['首席执行官', '首席技术官', '首席财务官', '首席营销官', '首席运营官', '产品总监', '人力资源总监', '法务总监'];
+    } else if (configMode === 'debate') {
+      return ['激进先锋', '稳健卫士', '逻辑大师', '人文关怀者', '实战专家', '质疑大师'];
     } else {
       return ['战略分析师', '创新专家', '质量控制专家', '执行策略专家', '共识建设专家', '全局分析师', '伦理顾问'];
     }
@@ -106,12 +134,72 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
       setConfigMode(newMode);
       
       // 自动更新智能体配置以匹配新模式
-      const newAgents = newMode === 'enterprise' ? 
-        getEnterpriseAgents() : getDefaultAgents();
+      let newAgents;
+      if (newMode === 'enterprise') {
+        newAgents = getEnterpriseAgents();
+      } else if (newMode === 'debate') {
+        newAgents = getDebateAgents();
+      } else {
+        newAgents = getDefaultAgents();
+      }
       
       setAgentList(newAgents);
       saveAgentsConfig(newAgents);
     }
+  };
+
+  // 获取辩论博弈模式的默认智能体配置
+  const getDebateAgents = () => {
+    return [
+      { 
+        id: 'agent1', 
+        name: '激进先锋', 
+        role: '激进先锋', 
+        apiKey: '', 
+        model: 'deepseek-ai/DeepSeek-V3', 
+        description: roleTemplates['激进先锋'].description
+      },
+      { 
+        id: 'agent2', 
+        name: '稳健卫士', 
+        role: '稳健卫士', 
+        apiKey: '', 
+        model: 'Qwen/QwQ-32B', 
+        description: roleTemplates['稳健卫士'].description
+      },
+      { 
+        id: 'agent3', 
+        name: '逻辑大师', 
+        role: '逻辑大师', 
+        apiKey: '', 
+        model: 'Qwen/Qwen2.5-72B-Instruct', 
+        description: roleTemplates['逻辑大师'].description
+      },
+      { 
+        id: 'agent4', 
+        name: '人文关怀者', 
+        role: '人文关怀者', 
+        apiKey: '', 
+        model: 'deepseek-ai/DeepSeek-V2.5', 
+        description: roleTemplates['人文关怀者'].description
+      },
+      { 
+        id: 'agent5', 
+        name: '实战专家', 
+        role: '实战专家', 
+        apiKey: '', 
+        model: 'Qwen/Qwen2.5-32B-Instruct', 
+        description: roleTemplates['实战专家'].description
+      },
+      { 
+        id: 'agent6', 
+        name: '质疑大师', 
+        role: '质疑大师', 
+        apiKey: '', 
+        model: 'THUDM/GLM-4-32B-0414', 
+        description: roleTemplates['质疑大师'].description
+      }
+    ];
   };
 
   // 获取企业模式的默认智能体配置
@@ -229,7 +317,7 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
     
     return loadSavedAgents();
   });
-  const [configMode, setConfigMode] = useState('custom'); // 'custom' | 'enterprise'
+  const [configMode, setConfigMode] = useState('custom'); // 'custom' | 'enterprise' | 'debate'
   const [showModeratorConfig, setShowModeratorConfig] = useState(false);
   const [moderatorConfig, setModeratorConfig] = useState(moderatorConfigStorage.getModeratorConfig());
 
@@ -363,7 +451,14 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
   // 重置为默认配置
   const resetToDefault = () => {
     if (window.confirm('确定要重置为默认配置吗？这将清除当前所有自定义设置。')) {
-      const defaultAgents = configMode === 'enterprise' ? getEnterpriseAgents() : getDefaultAgents();
+      let defaultAgents;
+      if (configMode === 'enterprise') {
+        defaultAgents = getEnterpriseAgents();
+      } else if (configMode === 'debate') {
+        defaultAgents = getDebateAgents();
+      } else {
+        defaultAgents = getDefaultAgents();
+      }
       setAgentList(defaultAgents);
       saveAgentsConfig(defaultAgents);
     }
@@ -495,10 +590,27 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
           >
             🏢 企业决策模式
           </button>
+          <button 
+            className={`mode-button ${configMode === 'debate' ? 'active' : ''}`}
+            onClick={() => handleModeChange('debate')}
+            style={{
+              backgroundColor: configMode === 'debate' ? '#dc2626' : 'var(--card-bg)',
+              color: configMode === 'debate' ? 'white' : 'var(--text-color)',
+              border: '2px solid #dc2626',
+              borderRadius: '8px',
+              padding: '1rem',
+              cursor: 'pointer',
+              flex: 1,
+              textAlign: 'center',
+              fontWeight: 'bold'
+            }}
+          >
+            🔥 辩论博弈模式
+          </button>
         </div>
         <div className="mode-description" style={{
           padding: '1rem',
-          backgroundColor: 'rgba(124, 58, 237, 0.1)',
+          backgroundColor: configMode === 'debate' ? 'rgba(220, 38, 38, 0.1)' : 'rgba(124, 58, 237, 0.1)',
           borderRadius: '8px',
           marginBottom: '1rem'
         }}>
@@ -506,9 +618,13 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
             <p style={{ margin: 0, color: 'var(--text-color)' }}>
               7个智慧协调的智能体角色，通过建设性博弈与协调，实现深度思维融合
             </p>
-          ) : (
+          ) : configMode === 'enterprise' ? (
             <p style={{ margin: 0, color: 'var(--text-color)' }}>
               8个专业企业角色，模拟真实企业高管团队的决策流程和讨论
+            </p>
+          ) : (
+            <p style={{ margin: 0, color: 'var(--text-color)' }}>
+              6个对立辩论角色，通过激烈博弈与深度辩论，挖掘问题本质与最优解决方案
             </p>
           )}
         </div>
@@ -531,6 +647,44 @@ const AgentConfig = ({ agents = [], onAgentsConfigured }) => {
                 border: '1px solid var(--border-color)'
               }}>
                 <h4 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)' }}>
+                  {roleTemplates[roleName].name} ({roleName})
+                </h4>
+                <p style={{ 
+                  margin: 0, 
+                  color: 'var(--text-color)', 
+                  fontSize: '0.9rem',
+                  lineHeight: '1.4',
+                  overflow: 'hidden',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical'
+                }}>
+                  {roleTemplates[roleName].description.split('。')[0]}...
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 辩论博弈模式角色展示 */}
+      {configMode === 'debate' && (
+        <div className="debate-mode" style={{ marginBottom: '2rem' }}>
+          <div className="debate-roles" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            {getCurrentModeRoles().map((roleName) => (
+              <div key={roleName} className="role-category" style={{
+                backgroundColor: 'var(--card-bg)',
+                padding: '1rem',
+                borderRadius: '8px',
+                border: '1px solid #dc2626',
+                borderLeft: '4px solid #dc2626'
+              }}>
+                <h4 style={{ marginBottom: '0.5rem', color: '#dc2626' }}>
                   {roleTemplates[roleName].name} ({roleName})
                 </h4>
                 <p style={{ 
